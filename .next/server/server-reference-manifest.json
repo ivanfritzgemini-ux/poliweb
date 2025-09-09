@@ -1,15 +1,19 @@
 {
   "node": {
-    "400f737a1a15becc89d8fa1f1b6f5a9806c8fa8fb3": {
+    "002661833dc8c035414bc276704ea4a84e01f98c9e": {
       "workers": {
-        "app/students/page": {
-          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
+        "app/staff/page": {
+          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getStaff",
+          "filename": "src/lib/actions.ts"
         }
       },
       "layer": {
-        "app/students/page": "action-browser"
-      }
+        "app/staff/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "getStaff"
     }
   },
   "edge": {},

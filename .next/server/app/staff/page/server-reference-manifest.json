@@ -1,4 +1,20 @@
 {
-  "node": {},
+  "node": {
+    "002661833dc8c035414bc276704ea4a84e01f98c9e": {
+      "workers": {
+        "app/staff/page": {
+          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getStaff",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/staff/page": "action-browser"
+      },
+      "exportedName": "getStaff",
+      "filename": "src/lib/actions.ts"
+    }
+  },
   "edge": {}
 }
