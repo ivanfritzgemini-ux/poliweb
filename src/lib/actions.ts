@@ -1,21 +1,7 @@
 'use server';
 
-import {
-  generateStudentAvatar,
-  type GenerateStudentAvatarInput,
-} from '@/ai/flows/generate-student-avatar';
 import { supabase } from './supabase';
 import type { Staff } from './types';
-
-export async function generateAvatarAction(input: GenerateStudentAvatarInput) {
-  try {
-    const output = await generateStudentAvatar(input);
-    return { avatarDataUri: output.avatarDataUri };
-  } catch (e: any) {
-    console.error(e);
-    return { error: e.message || 'An unknown error occurred' };
-  }
-}
 
 export async function getStaff(): Promise<Staff[]> {
   const { data, error } = await supabase.from('usuarios').select('id, rut, nombres, apellidos, email, status, sexo(id, nombre), role:roles(id, nombre_rol)');
@@ -68,7 +54,7 @@ export async function addStaff(formData: any) {
     fecha_nacimiento: rest.fecha_de_nacimiento, // Already an ISO string
     telefono: rest.telefono || null,
     direccion: rest.direccion || null,
-  });
+  }).select('id, rut, nombres, apellidos, email, status, sexo(id, nombre), role:roles(id, nombre_rol)').single();
 
   if (error) {
     console.error('Error inserting staff data:', error);
@@ -112,6 +98,70 @@ export async function updateStaff(rut: string, updates: any, userId?: string) {
 
   if (error) {
     console.error('Error updating staff data:', error);
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function getStaffByRut(rut: string): Promise<Staff | null> {
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('id, rut, nombres, apellidos, email, status, sexo(id, nombre), role:roles(id, nombre_rol), telefono, direccion, fecha_nacimiento')
+    .eq('rut', rut)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found, which is not an error here.
+    console.error('Error fetching staff by RUT:', error);
+    throw new Error('No se pudo buscar el personal por RUT.');
+  }
+
+  return data as Staff | null;
+}
+
+export async function getStudents(): Promise<any[]> {
+  // This query joins student details with user details.
+  // It assumes 'estudiantes_detalles' has a 'rut' column that is a foreign key to 'usuarios.rut'.
+  const { data, error } = await supabase
+    .from('estudiantes_detalles')
+    .select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(nivel, letra), usuario:usuarios(rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(nombre), email, telefono, direccion)')
+    .order('nro_registro', { ascending: true });
+  if (error) {
+    console.error('Error fetching students:', error);
+    throw new Error('Could not fetch student data.');
+  }
+  return data.map(s => ({ ...s.usuario, ...s, id: s.nro_registro, grade: s.curso?.nivel ? `${s.curso.nivel}º Medio ${s.curso.letra}` : null, enrollmentDate: s.fecha_matricula }));
+}
+
+export async function getCourses(): Promise<{ id: string; nombre: string }[]> {
+  const { data, error } = await supabase.from('cursos').select('id, nivel, letra');
+
+  if (error) {
+    console.error('Error fetching courses:', error);
+    throw new Error('Could not fetch courses data.');
+  }
+
+  return data.map(curso => ({ id: String(curso.id), nombre: `${curso.nivel}º Medio ${curso.letra}` }));
+}
+
+export async function addStudent(studentData: any) {
+  // This function now only inserts into 'estudiantes_detalles'
+  // It assumes the user (identified by RUT) already exists in the 'usuarios' table.
+  const { data, error } = await supabase
+    .from('estudiantes_detalles')
+    .insert([
+      {
+        id: studentData.usuario,
+        nro_registro: studentData.id,
+        curso_id: studentData.curso_id,
+        fecha_matricula: studentData.enrollmentDate,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error inserting student data:', error);
     throw new Error(error.message);
   }
 

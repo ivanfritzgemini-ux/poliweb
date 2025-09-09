@@ -1,5 +1,87 @@
 {
   "node": {
+    "001caa51f19e6476b6e551c8dc978110694224d596": {
+      "workers": {
+        "app/students/page": {
+          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getStudents",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/students/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "getStudents"
+    },
+    "0009c048a3bd6aa52d0b25e31c4d73d5b53082487f": {
+      "workers": {
+        "app/staff/page": {
+          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getSexos",
+          "filename": "src/lib/actions.ts"
+        },
+        "app/students/page": {
+          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getSexos",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/staff/page": "action-browser",
+        "app/students/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "getSexos"
+    },
+    "003b2eeb44f52ef0e5bacd2292a025606f38a09047": {
+      "workers": {
+        "app/students/page": {
+          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCourses",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/students/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "getCourses"
+    },
+    "407f7da717f73806b1cc158e584114ac5d985bd882": {
+      "workers": {
+        "app/students/page": {
+          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getStaffByRut",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/students/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "getStaffByRut"
+    },
+    "40b04ca58732377a447a3233051dba938f9d133ed9": {
+      "workers": {
+        "app/students/page": {
+          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addStudent",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/students/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "addStudent"
+    },
     "002661833dc8c035414bc276704ea4a84e01f98c9e": {
       "workers": {
         "app/staff/page": {
@@ -29,21 +111,6 @@
       },
       "filename": "src/lib/actions.ts",
       "exportedName": "updateStaff"
-    },
-    "0009c048a3bd6aa52d0b25e31c4d73d5b53082487f": {
-      "workers": {
-        "app/staff/page": {
-          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "getSexos",
-          "filename": "src/lib/actions.ts"
-        }
-      },
-      "layer": {
-        "app/staff/page": "action-browser"
-      },
-      "filename": "src/lib/actions.ts",
-      "exportedName": "getSexos"
     },
     "0019014b60c42d5b6e2ab997e98c0c7c9fa2392eb5": {
       "workers": {

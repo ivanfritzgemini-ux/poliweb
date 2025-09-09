@@ -52,13 +52,14 @@ const formSchema = z.object({
 });
 
 type AddStaffFormProps = {
+  sexos: { id: string; nombre: string }[];
+  roles: { id: string; nombre_rol: string }[];
   onStaffAdded: (staff: Staff) => void;
 };
 
-export function AddStaffForm({ onStaffAdded }: AddStaffFormProps) {
+export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) {
   const { toast } = useToast();
-  const [sexos, setSexos] = useState<{ id: string; nombre: string }[]>([]);
-  const [roles, setRoles] = useState<{ id: string; nombre_rol: string }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -75,17 +76,8 @@ export function AddStaffForm({ onStaffAdded }: AddStaffFormProps) {
     },
   });
 
-  useEffect(() => {
-    async function fetchData() {
-      const fetchedSexos = await getSexos();
-      const fetchedRoles = await getRoles();
-      setSexos(fetchedSexos as { id: string; nombre: string }[]);
-      setRoles(fetchedRoles as { id: string; nombre_rol: string }[]);
-    }
-    fetchData();
-  }, []);
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
     try {
       const fechaNacimientoDate = new Date(values.fecha_de_nacimiento); // Parse YYYY-MM-DD string to Date object
 
@@ -104,21 +96,9 @@ export function AddStaffForm({ onStaffAdded }: AddStaffFormProps) {
         direccion: values.direccion || null,
       };
 
-      await addStaff({ ...staffData, password: values.password });
+      const newStaffMember = await addStaff({ ...staffData, password: values.password });
 
-      // Assuming the addStaff function returns the newly added staff member
-      // We need to construct a Staff object to pass to onStaffAdded
-      const newStaffMember: Staff = {
-        rut: values.rut,
-        nombres: values.nombres,
-        apellidos: values.apellidos,
-        sexo: sexos.find(s => s.id === values.sexo_id) || null,
-        email: values.email,
-        role: roles.find(r => r.id === values.rol_id) || null,
-        status: true, // Default status for new staff
-      };
-
-      onStaffAdded(newStaffMember);
+      onStaffAdded(newStaffMember as Staff);
       toast({
         title: 'Personal Añadido',
         description: `${values.nombres} ${values.apellidos} ha sido añadido al sistema.`,
@@ -130,6 +110,8 @@ export function AddStaffForm({ onStaffAdded }: AddStaffFormProps) {
         description: error.message || 'Ocurrió un error desconocido.',
         variant: 'destructive',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -251,7 +233,7 @@ export function AddStaffForm({ onStaffAdded }: AddStaffFormProps) {
         />
         <FormField
           control={form.control}
-          name="fecha_de_nacimiento"
+          name="fecha_de_nacimiento" // No changes to the name, only the label
           render={({ field }) => (
             <FormItem className="col-span-2">
               <FormLabel className="text-sm sm:text-base">Fecha de Nacimiento</FormLabel>
@@ -270,7 +252,7 @@ export function AddStaffForm({ onStaffAdded }: AddStaffFormProps) {
         <FormField
           control={form.control}
           name="telefono"
-          render={({ field }) => (
+          render={({ field }) => ( // No changes to the name, only the label
             <FormItem>
               <FormLabel className="text-sm sm:text-base">Teléfono (Opcional)</FormLabel>
               <FormControl>
@@ -283,7 +265,7 @@ export function AddStaffForm({ onStaffAdded }: AddStaffFormProps) {
         <FormField
           control={form.control}
           name="direccion"
-          render={({ field }) => (
+          render={({ field }) => ( // No changes to the name, only the label
             <FormItem>
               <FormLabel className="text-sm sm:text-base">Dirección (Opcional)</FormLabel>
               <FormControl>
@@ -294,7 +276,10 @@ export function AddStaffForm({ onStaffAdded }: AddStaffFormProps) {
           )}
         />
         <div className="col-span-2 flex justify-end pt-2">
-          <Button type="submit">Añadir Personal</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Añadir
+          </Button>
         </div>
       </form>
     </Form>

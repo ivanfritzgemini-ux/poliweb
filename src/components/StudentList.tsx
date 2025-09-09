@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Student } from '@/lib/types';
 import {
   Table,
@@ -24,31 +24,83 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PlusCircle, Search } from 'lucide-react';
 import { EnrollStudentForm } from './EnrollStudentForm';
-import { Card, CardContent } from './ui/card';
-
-const MOCK_STUDENTS: Student[] = [
-  { id: 'STU-001', name: 'Ana García', grade: '10º Grado', enrollmentDate: '2023-09-01', status: 'active', avatarUrl: 'https://picsum.photos/seed/ana/40/40', email: 'ana.garcia@example.com', phone: '555-0101', address: '123 Maple St' },
-  { id: 'STU-002', name: 'Luis Rodríguez', grade: '11º Grado', enrollmentDate: '2023-09-01', status: 'active', avatarUrl: 'https://picsum.photos/seed/luis/40/40', email: 'luis.rodriguez@example.com', phone: '555-0102', address: '456 Oak Ave' },
-  { id: 'STU-003', name: 'Sofía Martinez', grade: '9º Grado', enrollmentDate: '2023-09-02', status: 'inactive', avatarUrl: 'https://picsum.photos/seed/sofia/40/40', email: 'sofia.martinez@example.com', phone: '555-0103', address: '789 Pine Ln' },
-  { id: 'STU-004', name: 'Carlos Hernández', grade: '12º Grado', enrollmentDate: '2023-09-01', status: 'active', email: 'carlos.h@example.com', phone: '555-0104', address: '101 Elm Ct' },
-];
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { getStudents, getSexos, getCourses } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from './ui/skeleton';
 
 export function StudentList() {
-  const [students, setStudents] = useState<Student[]>(MOCK_STUDENTS);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [sexos, setSexos] = useState<{ id: string; nombre: string }[]>([]);
+  const [courses, setCourses] = useState<{ id: string; nombre: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setIsLoading(true);
+      try {
+        const [studentsData, sexosData, coursesData] = await Promise.all([
+          getStudents(),
+          getSexos(),
+          getCourses(),
+        ]);
+
+        setStudents(studentsData as Student[]);
+        setSexos(sexosData as { id: string; nombre: string }[]);
+        setCourses(coursesData as { id: string; nombre: string }[]);
+      } catch (error) {
+        toast({
+          title: 'Error al cargar datos',
+          description: 'No se pudieron cargar los datos iniciales.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchInitialData();
+  }, [toast]);
 
   const filteredStudents = useMemo(() =>
     students.filter(student =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${student.nombres} ${student.apellidos}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.grade.toLowerCase().includes(searchTerm.toLowerCase())
     ), [students, searchTerm]);
+
+  const maxId = useMemo(() => {
+    if (students.length === 0) {
+      return 0;
+    }
+    return Math.max(...students.map(s => parseInt(s.id, 10)));
+  }, [students]);
 
   const handleAddStudent = (newStudent: Student) => {
     setStudents(prev => [newStudent, ...prev]);
     setIsFormOpen(false);
   };
+
+  const TableSkeleton = () => (
+    <Table>
+      <TableHeader>
+        <TableRow key="skeleton-header">
+          {[...Array(10)].map((_, i) => <TableHead key={i}><Skeleton className="h-5 w-full" /></TableHead>)}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {[...Array(5)].map((_, i) => (
+          <TableRow key={i}>
+            <TableCell colSpan={10}>
+              <Skeleton className="h-8 w-full" />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
 
   return (
     <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -72,15 +124,19 @@ export function StudentList() {
             </DialogTrigger>
           </div>
           <div className="rounded-lg border">
-            <Table>
+            {isLoading ? <TableSkeleton /> : (
+              <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Estudiante</TableHead>
-                  <TableHead className="hidden md:table-cell">ID</TableHead>
-                  <TableHead>Grado</TableHead>
-                  <TableHead className="hidden lg:table-cell">Fecha de Matrícula</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
+                  <TableHead className="w-[100px]">Nº Registro</TableHead>
+                  <TableHead>RUT</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead className="hidden md:table-cell">Sexo</TableHead>
+                  <TableHead className="hidden lg:table-cell">Fec. Nacimiento</TableHead>
+                  <TableHead>Curso</TableHead>
+                  <TableHead className="hidden lg:table-cell">Fec. Matrícula</TableHead>
+                  <TableHead className="hidden lg:table-cell">Fec. Retiro</TableHead>
+                  <TableHead className="text-right w-[100px]">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -88,22 +144,19 @@ export function StudentList() {
                   filteredStudents.map((student) => (
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={student.avatarUrl} data-ai-hint="student face" />
-                            <AvatarFallback>{student.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <span className="truncate">{student.name}</span>
+                        {student.id}
+                      </TableCell>
+                      <TableCell>{student.rut}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {`${student.nombres} ${student.apellidos}`}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{student.id}</TableCell>
+                      <TableCell className="hidden md:table-cell">{student.sexo?.nombre}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{new Date(student.fecha_nacimiento).toLocaleDateString('es-ES')}</TableCell>
                       <TableCell>{student.grade}</TableCell>
                       <TableCell className="hidden lg:table-cell">{new Date(student.enrollmentDate).toLocaleDateString('es-ES')}</TableCell>
-                      <TableCell>
-                        <Badge variant={student.status === 'active' ? 'default' : 'secondary'}>
-                          {student.status === 'active' ? 'Activo' : 'Inactivo'}
-                        </Badge>
-                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">{student.fecha_retiro ? new Date(student.fecha_retiro).toLocaleDateString('es-ES') : '-'}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm">Editar</Button>
                       </TableCell>
@@ -111,13 +164,14 @@ export function StudentList() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={10} className="h-24 text-center">
                       No se encontraron estudiantes.
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -128,7 +182,7 @@ export function StudentList() {
             Complete los detalles a continuación para registrar a un nuevo estudiante. Se generará una foto de perfil por IA si no se carga una.
           </DialogDescription>
         </DialogHeader>
-        <EnrollStudentForm onStudentAdded={handleAddStudent} />
+        <EnrollStudentForm onStudentAdded={handleAddStudent} nextId={maxId + 1} sexos={sexos} courses={courses} />
       </DialogContent>
     </Dialog>
   );

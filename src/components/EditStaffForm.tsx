@@ -67,17 +67,8 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
     },
   });
 
-  useEffect(() => {
-    async function fetchData() {
-      const fetchedSexos = await getSexos();
-      const fetchedRoles = await getRoles();
-      setSexos(fetchedSexos as { id: string; nombre: string }[]);
-      setRoles(fetchedRoles as { id: string; nombre_rol: string }[]);
-    }
-    fetchData();
-  }, []);
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
     try {
       const fechaNacimientoDate = new Date(values.fecha_de_nacimiento); // Parse YYYY-MM-DD string to Date object
 
@@ -115,6 +106,8 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
         description: error.message || 'Ocurrió un error desconocido.',
         variant: 'destructive',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -198,7 +191,7 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
         <FormField
           control={form.control}
           name="fecha_de_nacimiento"
-          render={({ field }) => (
+          render={({ field }) => ( // No changes to the name, only the label
             <FormItem className="col-span-2">
               <FormLabel className="text-sm sm:text-base">Fecha de Nacimiento</FormLabel>
               <FormControl>
@@ -216,7 +209,7 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
         <FormField
           control={form.control}
           name="telefono"
-          render={({ field }) => (
+          render={({ field }) => ( // No changes to the name, only the label
             <FormItem>
               <FormLabel className="text-sm sm:text-base">Teléfono (Opcional)</FormLabel>
               <FormControl>
@@ -229,7 +222,7 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
         <FormField
           control={form.control}
           name="direccion"
-          render={({ field }) => (
+          render={({ field }) => ( // No changes to the name, only the label
             <FormItem>
               <FormLabel className="text-sm sm:text-base">Dirección (Opcional)</FormLabel>
               <FormControl>
@@ -240,7 +233,10 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
           )}
         />
         <div className="col-span-2 flex justify-end pt-2">
-          <Button type="submit">Actualizar Personal</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Actualizar
+          </Button>
         </div>
       </form>
     </Form>

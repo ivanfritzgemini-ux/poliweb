@@ -14,68 +14,168 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { Student } from '@/lib/types';
-import { generateAvatarAction } from '@/lib/actions';
+import { getStaffByRut, getSexos, getCourses, addStudent } from '@/lib/actions';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Loader2, Search } from 'lucide-react';
+import { formatChileanRut, validateChileanRut } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 const formSchema = z.object({
-  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres.'),
+  id: z.string().min(1, "El número de registro es requerido."),
+  rut: z.string().refine(validateChileanRut, { message: 'RUT inválido.' }),
+  nombres: z.string().min(2, 'El nombre debe tener al menos 2 caracteres.'),
+  apellidos: z.string().min(2, 'Los apellidos deben tener al menos 2 caracteres.'),
+  sexo_id: z.string({ required_error: 'Debe seleccionar un sexo.' }),
+  fecha_nacimiento: z.string({ required_error: 'Debe seleccionar una fecha de nacimiento.' }).refine(
+    (dateString) => !isNaN(new Date(dateString).getTime()),
+    {
+      message: 'La fecha de nacimiento no es válida.',
+    }
+  ),
   email: z.string().email('Email inválido.'),
-  phone: z.string().min(5, 'Número de teléfono inválido.'),
-  address: z.string().min(5, 'Dirección inválida.'),
-  grade: z.string().min(1, 'El grado es requerido.'),
+  phone: z.string().min(5, 'Número de teléfono inválido.').optional().or(z.literal('')),
+  address: z.string().min(5, 'Dirección inválida.').optional().or(z.literal('')),
+  curso_id: z.string({ required_error: 'Debe seleccionar un curso.' }),
+  enrollmentDate: z.string({ required_error: 'Debe seleccionar una fecha de matrícula.' }).refine(
+    (dateString) => !isNaN(new Date(dateString).getTime()),
+    {
+      message: 'La fecha de matrícula no es válida.',
+    }
+  ),
 });
 
 type EnrollStudentFormProps = {
+  nextId: number;
+  sexos: { id: string; nombre: string }[];
+  courses: { id: string; nombre: string }[];
   onStudentAdded: (student: Student) => void;
 };
 
-export function EnrollStudentForm({ onStudentAdded }: EnrollStudentFormProps) {
+export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos, courses: initialCourses }: EnrollStudentFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [sexos, setSexos] = useState(initialSexos);
+  const [courses, setCourses] = useState(initialCourses);
+  const rutInputRef = useRef<HTMLInputElement>(null);
+  const [foundUserId, setFoundUserId] = useState<string | null>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
+      id: String(nextId),
+      rut: '',
+      nombres: '',
+      apellidos: '',
+      sexo_id: '',
+      fecha_nacimiento: '', // This should be a string in 'yyyy-MM-dd' format
       email: '',
       phone: '',
       address: '',
-      grade: '',
+      curso_id: '',
+      enrollmentDate: new Date().toISOString().split('T')[0],
     },
   });
+  
+  useEffect(() => {
+    rutInputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!initialSexos || initialSexos.length === 0) {
+        const fetchedSexos = await getSexos();
+        setSexos(fetchedSexos as { id: string; nombre: string }[]);
+      }
+      if (!initialCourses || initialCourses.length === 0) {
+        const fetchedCourses = await getCourses();
+        setCourses(fetchedCourses);
+      }
+    }
+    fetchData();
+  }, [initialSexos, initialCourses]);
+
+  const handleSearchByRut = async () => {
+    const rut = form.getValues('rut');
+    if (!validateChileanRut(rut)) {
+      form.setError('rut', { type: 'manual', message: 'RUT inválido.' });
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const person = await getStaffByRut(rut);
+      if (person) {
+        setFoundUserId(person.id);
+        form.setValue('nombres', person.nombres);
+        form.setValue('apellidos', person.apellidos);
+        form.setValue('email', person.email);
+        form.setValue('phone', person.telefono || '');
+        form.setValue('address', person.direccion || '');
+        form.setValue('fecha_nacimiento', person.fecha_nacimiento ? format(new Date(person.fecha_nacimiento), 'yyyy-MM-dd') : '');
+        if (person.sexo) form.setValue('sexo_id', person.sexo.id);
+        toast({ title: 'Persona Encontrada', description: 'Datos cargados en el formulario.' });
+      } else {
+        setFoundUserId(null);
+        toast({ title: 'No Encontrado', description: 'No se encontró a nadie con ese RUT. Puede registrarlo manualmente.', variant: 'destructive' });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error en la Búsqueda',
+        description: error.message || 'No se pudo realizar la búsqueda.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      const avatarResult = await generateAvatarAction({ studentName: values.name });
-
-      if (avatarResult.error) {
-        toast({
-          title: 'Error al generar avatar',
-          description: avatarResult.error,
-          variant: 'destructive',
-        });
+      let userId = foundUserId;
+      if (!userId) {
+        const user = await getStaffByRut(values.rut);
+        if (user) {
+          userId = user.id;
+        } else {
+          toast({
+            title: 'Error',
+            description: 'El usuario con el RUT especificado no existe. Búsquelo antes de matricular.',
+            variant: 'destructive',
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
-      const newStudent: Student = {
-        id: `STU-${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}`,
-        ...values,
-        enrollmentDate: new Date().toISOString(),
-        status: 'active',
-        avatarUrl: avatarResult.avatarDataUri,
-      };
+      const studentName = `${values.nombres} ${values.apellidos}`;
+      const newStudentData = await addStudent({ ...values, usuario: userId });
 
-      onStudentAdded(newStudent);
+      // Construct the full student object for optimistic update
+      const fullNewStudent = {
+        ...values,
+        id: values.id, // nro_registro
+        sexo: sexos.find(s => s.id === values.sexo_id) || null,
+        grade: courses.find(c => c.id === values.curso_id)?.nombre || '',
+      };
+      onStudentAdded(fullNewStudent as Student);
       toast({
         title: 'Estudiante Matriculado',
-        description: `${values.name} ha sido añadido exitosamente.`,
+        description: `${studentName} ha sido añadido exitosamente.`,
       });
       form.reset();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Ocurrió un error al matricular al estudiante.',
+        description: error.message || 'Ocurrió un error al matricular al estudiante.',
         variant: 'destructive',
       });
     } finally {
@@ -86,10 +186,47 @@ export function EnrollStudentForm({ onStudentAdded }: EnrollStudentFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+            control={form.control}
+            name="id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Número de Registro</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ej: STU-001" {...field} readOnly />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        <div className="flex items-end gap-2">
+          <FormField
+            control={form.control}
+            name="rut"
+            render={({ field }) => (
+              <FormItem className="flex-grow">
+                <FormLabel>RUT</FormLabel>
+                <FormControl>
+                  <Input placeholder="12.345.678-9" {...field} ref={rutInputRef} onBlur={(e) => field.onChange(formatChileanRut(e.target.value))}/>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="button" onClick={handleSearchByRut} disabled={isSearching} className="h-10">
+            {isSearching ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+            <span className="sr-only">Buscar</span>
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
             control={form.control}
-            name="name"
+            name="nombres"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Nombre Completo</FormLabel>
@@ -102,13 +239,54 @@ export function EnrollStudentForm({ onStudentAdded }: EnrollStudentFormProps) {
           />
           <FormField
             control={form.control}
-            name="grade"
+            name="apellidos"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Grado</FormLabel>
+                <FormLabel>Apellidos</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ej: 10º Grado" {...field} />
+                  <Input placeholder="Ej: Pérez Díaz" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="enrollmentDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fecha de Matrícula</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="curso_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Curso</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccione un curso"/>
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {courses.map((course) => (
+                      <SelectItem key={course.id} value={course.id}>
+                        {course.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -121,6 +299,47 @@ export function EnrollStudentForm({ onStudentAdded }: EnrollStudentFormProps) {
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input placeholder="ejemplo@email.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="sexo_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sexo</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccione el sexo" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {sexos.map((sexo) => (
+                      <SelectItem key={sexo.id} value={sexo.id}>
+                        {sexo.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="fecha_nacimiento"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fecha de Nacimiento</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
