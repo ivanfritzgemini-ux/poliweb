@@ -4,12 +4,16 @@
       "workers": {
         "app/students/page": {
           "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
+          "async": false,
+          "exportedName": "generateAvatarAction",
+          "filename": "src/lib/actions.ts"
         }
       },
       "layer": {
         "app/students/page": "action-browser"
-      }
+      },
+      "exportedName": "generateAvatarAction",
+      "filename": "src/lib/actions.ts"
     }
   },
   "edge": {}

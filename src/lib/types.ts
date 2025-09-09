@@ -11,6 +11,7 @@ export type Student = {
 };
 
 export type Staff = {
+  id: string;
   rut: string;
   nombres: string;
   apellidos: string;

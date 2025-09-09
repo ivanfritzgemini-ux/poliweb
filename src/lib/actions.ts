@@ -18,7 +18,7 @@ export async function generateAvatarAction(input: GenerateStudentAvatarInput) {
 }
 
 export async function getStaff(): Promise<Staff[]> {
-  const { data, error } = await supabase.from('usuarios').select('*, sexo(nombre), role:roles(nombre_rol)');
+  const { data, error } = await supabase.from('usuarios').select('id, rut, nombres, apellidos, email, status, sexo(id, nombre), role:roles(id, nombre_rol)');
   if (error) {
     console.error('Error fetching staff:', error);
     throw new Error('Could not fetch staff data.');
@@ -78,8 +78,37 @@ export async function addStaff(formData: any) {
   return data;
 }
 
-export async function updateStaff(rut: string, updates: any) {
-  const { data, error } = await supabase.from('usuarios').update(updates).eq('rut', rut);
+export async function updateStaff(rut: string, updates: any, userId?: string) {
+  const { email, password, ...profileUpdates } = updates;
+
+  // 1. Update Supabase Auth if email or password are provided
+  if (email || password) {
+    const authUpdates: any = {};
+    if (email) authUpdates.email = email;
+    if (password) authUpdates.password = password;
+
+    if (!userId) {
+      throw new Error('User ID is required to update email or password.');
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.admin.updateUserById(
+      userId,
+      authUpdates
+    );
+
+    if (authError) {
+      console.error('Error updating auth user:', authError);
+      throw new Error(authError.message);
+    }
+
+    // If email was changed, update it in the profile table as well
+    if (email) {
+      profileUpdates.email = email;
+    }
+  }
+
+  // 2. Update the public.usuarios table
+  const { data, error } = await supabase.from('usuarios').update(profileUpdates).eq('rut', rut);
 
   if (error) {
     console.error('Error updating staff data:', error);

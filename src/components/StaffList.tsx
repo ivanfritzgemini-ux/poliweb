@@ -33,8 +33,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from './ui/card';
-import { getStaff } from '@/lib/actions';
 import { formatChileanRut } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { getStaff, updateStaff } from '@/lib/actions';
 
 export function StaffList() {
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -42,6 +43,7 @@ export function StaffList() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -73,8 +75,21 @@ export function StaffList() {
     setSelectedStaff(null);
   };
 
-  const handleStatusChange = (rut: string, status: 'active' | 'inactive') => {
-    setStaff(prev => prev.map(s => s.rut === rut ? { ...s, status } : s));
+  const handleStatusChange = async (person: Staff, status: boolean) => {
+    try {
+      await updateStaff(person.rut, { status }, person.id);
+      setStaff(prev => prev.map(s => s.rut === person.rut ? { ...s, status } : s));
+      toast({
+        title: 'Estado Actualizado',
+        description: `La cuenta de ${person.nombres} ${person.apellidos} ha sido ${status ? 'activada' : 'desactivada'}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error al actualizar estado',
+        description: error.message || 'Ocurrió un error desconocido.',
+        variant: 'destructive',
+      });
+    }
   };
 
 
@@ -122,8 +137,8 @@ export function StaffList() {
                       <TableCell className="hidden md:table-cell">{person.email}</TableCell>
                       <TableCell>{person.role?.nombre_rol}</TableCell>
                       <TableCell>
-                        <Badge variant={person.status === 'active' ? 'default' : 'secondary'}>
-                          {person.status === 'active' ? 'Activo' : 'Inactivo'}
+                        <Badge variant={person.status ? 'default' : 'secondary'}>
+                          {person.status ? 'Activo' : 'Inactivo'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -138,17 +153,16 @@ export function StaffList() {
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleEditClick(person)}>Editar información</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            {person.status === 'active' ? (
-                               <DropdownMenuItem onClick={() => handleStatusChange(person.rut, 'inactive')}>Desactivar cuenta</DropdownMenuItem>
+                            {person.status ? (
+                               <DropdownMenuItem onClick={() => handleStatusChange(person, false)}>Desactivar cuenta</DropdownMenuItem>
                             ) : (
-                               <DropdownMenuItem onClick={() => handleStatusChange(person.rut, 'active')}>Activar cuenta</DropdownMenuItem>
+                               <DropdownMenuItem onClick={() => handleStatusChange(person, true)}>Activar cuenta</DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
+                 </TableRow>
+                ))) : (
                   <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center">
                       No se encontró personal.
@@ -186,4 +200,3 @@ export function StaffList() {
     </Dialog>
   );
 }
-

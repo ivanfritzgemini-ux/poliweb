@@ -115,7 +115,7 @@ export function AddStaffForm({ onStaffAdded }: AddStaffFormProps) {
         sexo: sexos.find(s => s.id === values.sexo_id) || null,
         email: values.email,
         role: roles.find(r => r.id === values.rol_id) || null,
-        status: 'active', // Default status for new staff
+        status: true, // Default status for new staff
       };
 
       onStaffAdded(newStaffMember);

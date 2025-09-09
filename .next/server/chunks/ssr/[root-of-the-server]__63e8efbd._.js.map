@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
+    {"offset": {"line": 21, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/ivanf/Desktop/poli/src/app/staff/page.tsx"],"sourcesContent":["import { StaffList } from '@/components/StaffList';\n\nexport default function StaffPage() {\n  return (\n    <div className=\"space-y-6\">\n      <div className=\"flex flex-col space-y-1\">\n        <h1 className=\"text-3xl font-headline font-bold text-primary\">Gestión de Personal</h1>\n        <p className=\"text-muted-foreground\">Añada nuevos miembros del personal y gestione las cuentas existentes.</p>\n      </div>\n      <StaffList />\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;;AAAA;;;AAEe,SAAS;IACtB,qBACE,8OAAC;QAAI,WAAU;;0BACb,8OAAC;gBAAI,WAAU;;kCACb,8OAAC;wBAAG,WAAU;kCAAgD;;;;;;kCAC9D,8OAAC;wBAAE,WAAU;kCAAwB;;;;;;;;;;;;0BAEvC,8OAAC,4IAAS;;;;;;;;;;;AAGhB","debugId":null}}]
+}
