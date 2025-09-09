@@ -14,6 +14,66 @@
       },
       "filename": "src/lib/actions.ts",
       "exportedName": "getStaff"
+    },
+    "0009c048a3bd6aa52d0b25e31c4d73d5b53082487f": {
+      "workers": {
+        "app/staff/page": {
+          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getSexos",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/staff/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "getSexos"
+    },
+    "0019014b60c42d5b6e2ab997e98c0c7c9fa2392eb5": {
+      "workers": {
+        "app/staff/page": {
+          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getRoles",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/staff/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "getRoles"
+    },
+    "40e13c3d111a3339b1a932c31b2deb94cb1bcd10a2": {
+      "workers": {
+        "app/staff/page": {
+          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addStaff",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/staff/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "addStaff"
+    },
+    "607fa67a4333fe3439bfe95bf6f7b23ba685a2a53f": {
+      "workers": {
+        "app/staff/page": {
+          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateStaff",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/staff/page": "action-browser"
+      },
+      "filename": "src/lib/actions.ts",
+      "exportedName": "updateStaff"
     }
   },
   "edge": {},

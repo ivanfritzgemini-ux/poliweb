@@ -14,8 +14,8 @@ export type Staff = {
   rut: string;
   nombres: string;
   apellidos: string;
-  sexo: string;
+  sexo: { nombre: string } | null;
   email: string;
-  role: string;
+  role: { nombre_rol: string } | null;
   status: string;
 };

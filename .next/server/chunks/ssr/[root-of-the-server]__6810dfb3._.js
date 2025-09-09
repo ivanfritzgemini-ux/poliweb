@@ -167,7 +167,11 @@ function useToast() {
 
 __turbopack_context__.s([
     "cn",
-    ()=>cn
+    ()=>cn,
+    "formatChileanRut",
+    ()=>formatChileanRut,
+    "validateChileanRut",
+    ()=>validateChileanRut
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$clsx$2f$dist$2f$clsx$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/clsx/dist/clsx.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$tailwind$2d$merge$2f$dist$2f$bundle$2d$mjs$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/tailwind-merge/dist/bundle-mjs.mjs [app-ssr] (ecmascript)");
@@ -175,6 +179,39 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$tailwind$2d$
 ;
 function cn(...inputs) {
     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$tailwind$2d$merge$2f$dist$2f$bundle$2d$mjs$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["twMerge"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$clsx$2f$dist$2f$clsx$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["clsx"])(inputs));
+}
+function formatChileanRut(rut) {
+    if (!rut) {
+        return '';
+    }
+    const cleanRut = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+    if (cleanRut.length < 2) {
+        return cleanRut;
+    }
+    let body = cleanRut.slice(0, -1);
+    const dv = cleanRut.slice(-1);
+    body = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${body}-${dv}`;
+}
+function validateChileanRut(rut) {
+    if (!rut) return false;
+    // Clean RUT: remove dots and hyphens
+    const cleanRut = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+    // Check basic format: 7 to 9 digits/K followed by a single digit/K
+    if (!/^[0-9]{7,8}[0-9kK]{1}$/.test(cleanRut)) {
+        return false;
+    }
+    const body = cleanRut.slice(0, -1);
+    const dv = cleanRut.slice(-1);
+    let sum = 0;
+    let multiple = 2;
+    for(let i = body.length - 1; i >= 0; i--){
+        sum += parseInt(body.charAt(i), 10) * multiple;
+        multiple = multiple === 7 ? 2 : multiple + 1;
+    }
+    const calculatedDv = 11 - sum % 11;
+    const expectedDv = calculatedDv === 11 ? '0' : calculatedDv === 10 ? 'K' : calculatedDv.toString();
+    return dv === expectedDv;
 }
 }),
 "[project]/src/components/ui/toast.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {

@@ -266,11 +266,19 @@ const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_module
 "[project]/src/lib/actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"002661833dc8c035414bc276704ea4a84e01f98c9e":"getStaff","400f737a1a15becc89d8fa1f1b6f5a9806c8fa8fb3":"generateAvatarAction"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"0009c048a3bd6aa52d0b25e31c4d73d5b53082487f":"getSexos","0019014b60c42d5b6e2ab997e98c0c7c9fa2392eb5":"getRoles","002661833dc8c035414bc276704ea4a84e01f98c9e":"getStaff","400f737a1a15becc89d8fa1f1b6f5a9806c8fa8fb3":"generateAvatarAction","40e13c3d111a3339b1a932c31b2deb94cb1bcd10a2":"addStaff","607fa67a4333fe3439bfe95bf6f7b23ba685a2a53f":"updateStaff"},"",""] */ __turbopack_context__.s([
+    "addStaff",
+    ()=>addStaff,
     "generateAvatarAction",
     ()=>generateAvatarAction,
+    "getRoles",
+    ()=>getRoles,
+    "getSexos",
+    ()=>getSexos,
     "getStaff",
-    ()=>getStaff
+    ()=>getStaff,
+    "updateStaff",
+    ()=>updateStaff
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/build/webpack/loaders/next-flight-loader/server-reference.js [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$flows$2f$generate$2d$student$2d$avatar$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/ai/flows/generate-student-avatar.ts [app-rsc] (ecmascript)");
@@ -293,20 +301,86 @@ async function generateAvatarAction(input) {
     }
 }
 async function getStaff() {
-    const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('usuarios').select('*');
+    const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('usuarios').select('*, sexo(nombre), role:roles(nombre_rol)');
     if (error) {
         console.error('Error fetching staff:', error);
         throw new Error('Could not fetch staff data.');
     }
     return data;
 }
+async function getSexos() {
+    const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('sexo').select('id, nombre');
+    if (error) {
+        console.error('Error fetching sexos:', error);
+        throw new Error('Could not fetch sexos data.');
+    }
+    return data.map((sexo)=>({
+            ...sexo,
+            id: String(sexo.id)
+        }));
+}
+async function getRoles() {
+    const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('roles').select('id, nombre_rol');
+    if (error) {
+        console.error('Error fetching roles:', error);
+        throw new Error('Could not fetch roles data.');
+    }
+    return data.map((role)=>({
+            ...role,
+            id: String(role.id)
+        }));
+}
+async function addStaff(formData) {
+    const { email, password, ...rest } = formData;
+    const { data: authData, error: authError } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].auth.signUp({
+        email,
+        password
+    });
+    if (authError) {
+        console.error('Error signing up user:', authError);
+        throw new Error(authError.message);
+    }
+    const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('usuarios').insert({
+        id: authData.user?.id,
+        rut: rest.rut,
+        nombres: rest.nombres,
+        apellidos: rest.apellidos,
+        sexo_id: rest.sexo_id,
+        email: email,
+        rol_id: rest.rol_id,
+        fecha_nacimiento: rest.fecha_de_nacimiento,
+        telefono: rest.telefono || null,
+        direccion: rest.direccion || null
+    });
+    if (error) {
+        console.error('Error inserting staff data:', error);
+        throw new Error(error.message);
+    }
+    return data;
+}
+async function updateStaff(rut, updates) {
+    const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('usuarios').update(updates).eq('rut', rut);
+    if (error) {
+        console.error('Error updating staff data:', error);
+        throw new Error(error.message);
+    }
+    return data;
+}
 ;
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureServerEntryExports"])([
     generateAvatarAction,
-    getStaff
+    getStaff,
+    getSexos,
+    getRoles,
+    addStaff,
+    updateStaff
 ]);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(generateAvatarAction, "400f737a1a15becc89d8fa1f1b6f5a9806c8fa8fb3", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaff, "002661833dc8c035414bc276704ea4a84e01f98c9e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getSexos, "0009c048a3bd6aa52d0b25e31c4d73d5b53082487f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRoles, "0019014b60c42d5b6e2ab997e98c0c7c9fa2392eb5", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addStaff, "40e13c3d111a3339b1a932c31b2deb94cb1bcd10a2", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateStaff, "607fa67a4333fe3439bfe95bf6f7b23ba685a2a53f", null);
 }),
 "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript) <locals>", ((__turbopack_context__) => {
 "use strict";
@@ -314,13 +388,25 @@ async function getStaff() {
 __turbopack_context__.s([]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/actions.ts [app-rsc] (ecmascript)");
 ;
+;
+;
+;
+;
 }),
 "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
 __turbopack_context__.s([
+    "0009c048a3bd6aa52d0b25e31c4d73d5b53082487f",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getSexos"],
+    "0019014b60c42d5b6e2ab997e98c0c7c9fa2392eb5",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRoles"],
     "002661833dc8c035414bc276704ea4a84e01f98c9e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getStaff"]
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getStaff"],
+    "40e13c3d111a3339b1a932c31b2deb94cb1bcd10a2",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["addStaff"],
+    "607fa67a4333fe3439bfe95bf6f7b23ba685a2a53f",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateStaff"]
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f2e$next$2d$internal$2f$server$2f$app$2f$staff$2f$page$2f$actions$2e$js__$7b$__ACTIONS_MODULE0__$3d3e$__$225b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$2922$__$7d$__$5b$app$2d$rsc$5d$__$28$server__actions__loader$2c$__ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i('[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => "[project]/src/lib/actions.ts [app-rsc] (ecmascript)" } [app-rsc] (server actions loader, ecmascript) <locals>');
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/actions.ts [app-rsc] (ecmascript)");

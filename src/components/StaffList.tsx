@@ -23,6 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Search, MoreHorizontal } from 'lucide-react';
 import { AddStaffForm } from './AddStaffForm';
+import { EditStaffForm } from './EditStaffForm';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,11 +34,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from './ui/card';
 import { getStaff } from '@/lib/actions';
+import { formatChileanRut } from '@/lib/utils';
 
 export function StaffList() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -58,6 +62,17 @@ export function StaffList() {
     setIsFormOpen(false);
   };
   
+  const handleEditClick = (person: Staff) => {
+    setSelectedStaff(person);
+    setIsEditFormOpen(true);
+  };
+
+  const handleStaffUpdated = (updatedStaff: Staff) => {
+    setStaff(prev => prev.map(s => s.rut === updatedStaff.rut ? updatedStaff : s));
+    setIsEditFormOpen(false);
+    setSelectedStaff(null);
+  };
+
   const handleStatusChange = (rut: string, status: 'active' | 'inactive') => {
     setStaff(prev => prev.map(s => s.rut === rut ? { ...s, status } : s));
   };
@@ -101,11 +116,11 @@ export function StaffList() {
                 {filteredStaff.length > 0 ? (
                   filteredStaff.map((person) => (
                     <TableRow key={person.rut}>
-                      <TableCell className="font-medium">{person.rut}</TableCell>
+                      <TableCell className="font-medium">{formatChileanRut(person.rut)}</TableCell>
                       <TableCell>{`${person.nombres} ${person.apellidos}`}</TableCell>
-                      <TableCell>{person.sexo}</TableCell>
+                      <TableCell>{person.sexo?.nombre}</TableCell>
                       <TableCell className="hidden md:table-cell">{person.email}</TableCell>
-                      <TableCell>{person.role}</TableCell>
+                      <TableCell>{person.role?.nombre_rol}</TableCell>
                       <TableCell>
                         <Badge variant={person.status === 'active' ? 'default' : 'secondary'}>
                           {person.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -121,7 +136,7 @@ export function StaffList() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuItem>Editar información</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditClick(person)}>Editar información</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {person.status === 'active' ? (
                                <DropdownMenuItem onClick={() => handleStatusChange(person.rut, 'inactive')}>Desactivar cuenta</DropdownMenuItem>
@@ -154,6 +169,21 @@ export function StaffList() {
         </DialogHeader>
         <AddStaffForm onStaffAdded={handleAddStaff} />
       </DialogContent>
+
+      {selectedStaff && (
+        <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-headline">Editar Personal</DialogTitle>
+              <DialogDescription>
+                Actualice la información del miembro del personal.
+              </DialogDescription>
+            </DialogHeader>
+            <EditStaffForm staff={selectedStaff} onStaffUpdated={handleStaffUpdated} />
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }
+
