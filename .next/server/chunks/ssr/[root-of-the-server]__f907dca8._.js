@@ -51,7 +51,7 @@ const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_module
 "[project]/src/lib/actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"000c1785986823f0f7b88a24ed7f50a3a09b4fb3e8":"getStaff","001360e58df907c45745f24f3d1c0b1ac2578ef3fa":"getSexos","00891f9b4d067dec2b6e3822d71dd04d19d0bf271d":"getCourses","00aaed6a73c0edfdb1ad703a73a0f955cd08566a80":"getStudents","00f9af469b9dffbef6a90c7400513ba5de2b5143c8":"getRoles","402a21a934c0b4db3d757cf3237d46e5dd23440af7":"getStaffByRut","405942351deeaa3d9701482b5e6677d13ef7c7c62a":"getRoleIdByName","4061bfce9d28c7e7e546155f10656a2e7cb78344cc":"addStaff","4081bba27e6d0deed57af2105e8d98df7e827e97e9":"addStudent","60672b3b880deb48a7540967a240a96c26c997b328":"updateStudent","60ea012e8a715642589f9e5bf2df60597c68e2d869":"createUser","70318ae1f0710b3174289cd85dac0412dd58ea8703":"updateStaff"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"00993ca485e5d2106ebbe3470e7d33f31706e1ead0":"getSexos","009bc4aafca81a9593a208b36ff837f5be931cae69":"getRoles","00b7d9af2eec5652eef5b98b0907926421a4fb39b4":"getCourses","40058d1077f8840cbabd7e03c554094b5e5f0a84bc":"addStaff","40df04f54e420f376fe22acfaddc85dddc15e7ce7b":"getRoleIdByName","40e8c13541b6a5887cc9a22369f848f653e526e5fb":"getStaffByRut","40fca465c88e89f5681aaf5ee12d32b8dd3e4b2c57":"addStudent","604783343fd86c79acacf6d48e146c886237237adf":"createUser","60a948948dc9defb9361dc6a3104a65c8bf63dc98b":"getStaff","60cb495edbeb4dd57e02f78a4353b425b993fef6af":"getStudents","60dd6798ccb760dab6ddb2ab3d828479372ac7d3ca":"updateStudent","70d602f794a8b9f2d07cdd87573285df120d802748":"updateStaff"},"",""] */ __turbopack_context__.s([
     "addStaff",
     ()=>addStaff,
     "addStudent",
@@ -82,13 +82,23 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/build/webpack/loaders/next-flight-loader/action-validate.js [app-rsc] (ecmascript)");
 ;
 ;
-async function getStaff() {
-    const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('usuarios').select('id, rut, nombres, apellidos, email, status, fecha_nacimiento, sexo(id, nombre), role:roles(id, nombre_rol)');
+async function getStaff(page = 1, pageSize = 10) {
+    const rangeFrom = (page - 1) * pageSize;
+    const rangeTo = page * pageSize - 1;
+    const { data, error, count } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('usuarios').select('id, rut, nombres, apellidos, email, status, fecha_nacimiento, sexo(id, nombre), role:roles(id, nombre_rol)', {
+        count: 'exact'
+    }).order('rut', {
+        ascending: true
+    }) // Order by RUT for consistent pagination
+    .range(rangeFrom, rangeTo);
     if (error) {
         console.error('Error fetching staff:', error);
         throw new Error('Could not fetch staff data.');
     }
-    return data;
+    return {
+        staff: data,
+        totalCount: count || 0
+    };
 }
 async function getSexos() {
     const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('sexo').select('id, nombre');
@@ -184,16 +194,19 @@ async function getStaffByRut(rut) {
     }
     return data;
 }
-async function getStudents() {
-    // This query joins student details with user details.
-    const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('estudiantes_detalles').select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)').order('nro_registro', {
+async function getStudents(page = 1, pageSize = 10) {
+    const rangeFrom = (page - 1) * pageSize;
+    const rangeTo = page * pageSize - 1;
+    const { data, error, count } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('estudiantes_detalles').select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)', {
+        count: 'exact'
+    }).order('nro_registro', {
         ascending: true
-    });
+    }).range(rangeFrom, rangeTo);
     if (error) {
         console.error('Error fetching students:', error);
         throw new Error('Could not fetch student data.');
     }
-    return data.map((s)=>{
+    const students = data.map((s)=>{
         const student = {
             ...s.usuario,
             ...s,
@@ -206,6 +219,10 @@ async function getStudents() {
         student.curso = s.curso;
         return student;
     });
+    return {
+        students,
+        totalCount: count || 0
+    };
 }
 async function getCourses() {
     const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('cursos').select('id, nivel, letra');
@@ -325,18 +342,18 @@ async function updateStudent(userId, updates) {
     addStudent,
     updateStudent
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaff, "000c1785986823f0f7b88a24ed7f50a3a09b4fb3e8", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getSexos, "001360e58df907c45745f24f3d1c0b1ac2578ef3fa", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRoles, "00f9af469b9dffbef6a90c7400513ba5de2b5143c8", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRoleIdByName, "405942351deeaa3d9701482b5e6677d13ef7c7c62a", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addStaff, "4061bfce9d28c7e7e546155f10656a2e7cb78344cc", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateStaff, "70318ae1f0710b3174289cd85dac0412dd58ea8703", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaffByRut, "402a21a934c0b4db3d757cf3237d46e5dd23440af7", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStudents, "00aaed6a73c0edfdb1ad703a73a0f955cd08566a80", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCourses, "00891f9b4d067dec2b6e3822d71dd04d19d0bf271d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createUser, "60ea012e8a715642589f9e5bf2df60597c68e2d869", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addStudent, "4081bba27e6d0deed57af2105e8d98df7e827e97e9", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateStudent, "60672b3b880deb48a7540967a240a96c26c997b328", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaff, "60a948948dc9defb9361dc6a3104a65c8bf63dc98b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getSexos, "00993ca485e5d2106ebbe3470e7d33f31706e1ead0", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRoles, "009bc4aafca81a9593a208b36ff837f5be931cae69", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRoleIdByName, "40df04f54e420f376fe22acfaddc85dddc15e7ce7b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addStaff, "40058d1077f8840cbabd7e03c554094b5e5f0a84bc", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateStaff, "70d602f794a8b9f2d07cdd87573285df120d802748", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaffByRut, "40e8c13541b6a5887cc9a22369f848f653e526e5fb", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStudents, "60cb495edbeb4dd57e02f78a4353b425b993fef6af", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCourses, "00b7d9af2eec5652eef5b98b0907926421a4fb39b4", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createUser, "604783343fd86c79acacf6d48e146c886237237adf", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addStudent, "40fca465c88e89f5681aaf5ee12d32b8dd3e4b2c57", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateStudent, "60dd6798ccb760dab6ddb2ab3d828479372ac7d3ca", null);
 }),
 "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript) <locals>", ((__turbopack_context__) => {
 "use strict";
@@ -353,15 +370,15 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts_
 "use strict";
 
 __turbopack_context__.s([
-    "000c1785986823f0f7b88a24ed7f50a3a09b4fb3e8",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getStaff"],
-    "001360e58df907c45745f24f3d1c0b1ac2578ef3fa",
+    "00993ca485e5d2106ebbe3470e7d33f31706e1ead0",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getSexos"],
-    "00f9af469b9dffbef6a90c7400513ba5de2b5143c8",
+    "009bc4aafca81a9593a208b36ff837f5be931cae69",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRoles"],
-    "4061bfce9d28c7e7e546155f10656a2e7cb78344cc",
+    "40058d1077f8840cbabd7e03c554094b5e5f0a84bc",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["addStaff"],
-    "70318ae1f0710b3174289cd85dac0412dd58ea8703",
+    "60a948948dc9defb9361dc6a3104a65c8bf63dc98b",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getStaff"],
+    "70d602f794a8b9f2d07cdd87573285df120d802748",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateStaff"]
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f2e$next$2d$internal$2f$server$2f$app$2f$staff$2f$page$2f$actions$2e$js__$7b$__ACTIONS_MODULE0__$3d3e$__$225b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$2922$__$7d$__$5b$app$2d$rsc$5d$__$28$server__actions__loader$2c$__ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i('[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => "[project]/src/lib/actions.ts [app-rsc] (ecmascript)" } [app-rsc] (server actions loader, ecmascript) <locals>');

@@ -58,16 +58,23 @@ export function StaffList() {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'ascending' });
   const { toast } = useToast();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10); // You can make this configurable
+  const [totalStaff, setTotalStaff] = useState(0);
+
+  const totalPages = useMemo(() => Math.ceil(totalStaff / pageSize), [totalStaff, pageSize]);
+
   useEffect(() => {
-    const fetchStaff = async () => {
+    const fetchStaffData = async () => {
       setIsLoading(true);
       try {
-        const [staffData, sexosData, rolesData] = await Promise.all([
-          getStaff(),
+        const [{ staff: staffData, totalCount }, sexosData, rolesData] = await Promise.all([
+          getStaff(currentPage, pageSize),
           getSexos(),
           getRoles(),
         ]);
         setStaff(staffData);
+        setTotalStaff(totalCount);
         setSexos(sexosData as { id: string; nombre: string }[]);
         setRoles(rolesData as { id: string; nombre_rol: string }[]);
       } catch (error) {
@@ -81,8 +88,8 @@ export function StaffList() {
         setIsLoading(false);
       }
     };
-    fetchStaff();
-  }, []);
+    fetchStaffData();
+  }, [currentPage, pageSize, toast]);
 
   const filteredStaff = useMemo(() =>
     staff.filter(person =>
@@ -121,7 +128,9 @@ export function StaffList() {
   }, [filteredStaff, sortConfig]);
   
   const handleAddStaff = (newStaffMember: Staff) => {
-    setStaff(prev => [newStaffMember, ...prev]);
+    // After adding a staff member, re-fetch the current page to ensure accuracy
+    setTotalStaff(prev => prev + 1); // Optimistically increment total count
+    setCurrentPage(1); // Go to first page to see the new staff member
     setIsFormOpen(false);
   };
   
@@ -184,6 +193,14 @@ export function StaffList() {
       </TableBody>
     </Table>
   );
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1));
+  };
 
   return (
     <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -258,6 +275,32 @@ export function StaffList() {
               </TableBody>
             </Table>
             )}
+          </div>
+          <div className="flex items-center justify-between py-4">
+            <span className="text-sm text-muted-foreground">
+              Mostrando {sortedAndFilteredStaff.length} de {totalStaff} personal
+            </span>
+            <div className="space-x-2 flex items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+              >
+                Anterior
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

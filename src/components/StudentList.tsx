@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
 
 export function StudentList() {
-  const [students, setStudents] = useState<Student[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);
   const [sexos, setSexos] = useState<{ id: string; nombre: string }[]>([]);
   const [courses, setCourses] = useState<{ id: string; nombre: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,32 +39,51 @@ export function StudentList() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const { toast } = useToast();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10); // You can make this configurable
+  const [totalStudents, setTotalStudents] = useState(0);
+
+  const totalPages = useMemo(() => Math.ceil(totalStudents / pageSize), [totalStudents, pageSize]);
+
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchStudents = async () => {
       setIsLoading(true);
       try {
-        const [studentsData, sexosData, coursesData] = await Promise.all([
-          getStudents(),
-          getSexos(),
-          getCourses(),
-        ]);
-
+        const { students: studentsData, totalCount } = await getStudents(currentPage, pageSize);
         const sortedStudents = (studentsData as Student[]).sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10));
         setStudents(sortedStudents);
-        setSexos(sexosData as { id: string; nombre: string }[]);
-        setCourses(coursesData as { id: string; nombre: string }[]);
+        setTotalStudents(totalCount);
       } catch (error) {
         toast({
-          title: 'Error al cargar datos',
-          description: 'No se pudieron cargar los datos iniciales.',
+          title: 'Error al cargar estudiantes',
+          description: 'No se pudieron cargar los datos de los estudiantes.',
           variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
       }
     };
-    fetchInitialData();
-  }, [toast]);
+
+    const fetchSexosAndCourses = async () => {
+      try {
+        const [sexosData, coursesData] = await Promise.all([
+          getSexos(),
+          getCourses(),
+        ]);
+        setSexos(sexosData as { id: string; nombre: string }[]);
+        setCourses(coursesData as { id: string; nombre: string }[]);
+      } catch (error) {
+        toast({
+          title: 'Error al cargar datos complementarios',
+          description: 'No se pudieron cargar los datos de sexos y cursos.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    fetchStudents();
+    fetchSexosAndCourses();
+  }, [currentPage, pageSize, toast]);
 
   const filteredStudents = useMemo(() =>
     students.filter(student =>
@@ -82,10 +101,14 @@ export function StudentList() {
   }, [students]);
 
   const handleAddStudent = (newStudent: Student) => {
+    // After adding a student, we should ideally re-fetch the current page
+    // to ensure the list is up-to-date and pagination is correct.
+    // For simplicity, we'll just add it to the current list for now.
     setStudents(prev => {
       const updatedStudents = [...prev, newStudent];
       return updatedStudents.sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10));
     });
+    setTotalStudents(prev => prev + 1); // Increment total count
     setIsFormOpen(false);
   };
 
@@ -97,6 +120,14 @@ export function StudentList() {
   const handleStudentUpdated = (updatedStudent: Student) => {
     setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
     setIsEditModalOpen(false);
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1));
   };
 
   const TableSkeleton = () => (
@@ -190,6 +221,32 @@ export function StudentList() {
               </Table>
               )}
             </div>
+            <div className="flex items-center justify-between py-4">
+              <span className="text-sm text-muted-foreground">
+                Mostrando {filteredStudents.length} de {totalStudents} estudiantes
+              </span>
+              <div className="space-x-2 flex items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
         <DialogContent className="sm:max-w-2xl">
@@ -224,3 +281,4 @@ export function StudentList() {
     </>
   );
 }
+

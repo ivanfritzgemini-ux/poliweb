@@ -560,6 +560,11 @@ body {
   margin-right: .875rem;
 }
 
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .my-0\.5 {
   margin-top: .125rem;
   margin-bottom: .125rem;
@@ -1404,6 +1409,10 @@ body {
   padding-left: 2.5rem;
 }
 
+.pl-2\.5 {
+  padding-left: .625rem;
+}
+
 .pl-4 {
   padding-left: 1rem;
 }
@@ -1418,6 +1427,10 @@ body {
 
 .pr-2 {
   padding-right: .5rem;
+}
+
+.pr-2\.5 {
+  padding-right: .625rem;
 }
 
 .pr-8 {

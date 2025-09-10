@@ -3,13 +3,22 @@
 import { supabase } from './supabase';
 import type { Staff } from './types';
 
-export async function getStaff(): Promise<Staff[]> {
-  const { data, error } = await supabase.from('usuarios').select('id, rut, nombres, apellidos, email, status, fecha_nacimiento, sexo(id, nombre), role:roles(id, nombre_rol)');
+export async function getStaff(page: number = 1, pageSize: number = 10): Promise<{ staff: Staff[], totalCount: number }> {
+  const rangeFrom = (page - 1) * pageSize;
+  const rangeTo = page * pageSize - 1;
+
+  const { data, error, count } = await supabase
+    .from('usuarios')
+    .select('id, rut, nombres, apellidos, email, status, fecha_nacimiento, sexo(id, nombre), role:roles(id, nombre_rol)', { count: 'exact' })
+    .order('rut', { ascending: true }) // Order by RUT for consistent pagination
+    .range(rangeFrom, rangeTo);
+
   if (error) {
     console.error('Error fetching staff:', error);
     throw new Error('Could not fetch staff data.');
   }
-  return data as Staff[];
+
+  return { staff: data as Staff[], totalCount: count || 0 };
 }
 
 export async function getSexos() {
@@ -134,22 +143,29 @@ export async function getStaffByRut(rut: string): Promise<Staff | null> {
   return data as Staff | null;
 }
 
-export async function getStudents(): Promise<any[]> {
-  // This query joins student details with user details.
-  const { data, error } = await supabase
+export async function getStudents(page: number = 1, pageSize: number = 10): Promise<{ students: any[], totalCount: number }> {
+  const rangeFrom = (page - 1) * pageSize;
+  const rangeTo = page * pageSize - 1;
+
+  const { data, error, count } = await supabase
     .from('estudiantes_detalles')
-    .select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)')
-    .order('nro_registro', { ascending: true });
+    .select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)', { count: 'exact' })
+    .order('nro_registro', { ascending: true })
+    .range(rangeFrom, rangeTo);
+
   if (error) {
     console.error('Error fetching students:', error);
     throw new Error('Could not fetch student data.');
   }
-  return data.map(s => {
+
+  const students = data.map(s => {
     const student = { ...s.usuario, ...s, id: s.nro_registro, userId: s.usuario.id, grade: s.curso?.nivel ? `${s.curso.nivel}º Medio ${s.curso.letra}` : null, enrollmentDate: s.fecha_matricula };
     student.sexo = s.usuario.sexo;
     student.curso = s.curso;
     return student;
   });
+
+  return { students, totalCount: count || 0 };
 }
 
 export async function getCourses(): Promise<{ id: string; nombre: string }[]> {
