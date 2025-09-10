@@ -375,6 +375,9 @@ img, video {
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
 }
 
 .sr-only {
@@ -593,6 +596,10 @@ body {
 
 .mr-0 {
   margin-right: 0;
+}
+
+.mr-1 {
+  margin-right: .25rem;
 }
 
 .mr-2 {
@@ -827,10 +834,6 @@ body {
 
 .w-\[--sidebar-width\] {
   width: var(--sidebar-width);
-}
-
-.w-\[100px\] {
-  width: 100px;
 }
 
 .w-\[1px\] {
@@ -1134,6 +1137,10 @@ body {
   overflow: hidden;
 }
 
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
 .whitespace-nowrap {
   white-space: nowrap;
 }
@@ -1403,6 +1410,10 @@ body {
 
 .pl-8 {
   padding-left: 2rem;
+}
+
+.pr-10 {
+  padding-right: 2.5rem;
 }
 
 .pr-2 {

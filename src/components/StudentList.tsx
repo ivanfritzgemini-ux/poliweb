@@ -145,7 +145,7 @@ export function StudentList() {
                 <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[100px]">Nº Registro</TableHead>
+                    <TableHead>Nº Registro</TableHead>
                     <TableHead>RUT</TableHead>
                     <TableHead>Nombre</TableHead>
                     <TableHead className="hidden md:table-cell">Sexo</TableHead>
@@ -153,7 +153,7 @@ export function StudentList() {
                     <TableHead>Curso</TableHead>
                     <TableHead className="hidden lg:table-cell">Fec. Matrícula</TableHead>
                     <TableHead className="hidden lg:table-cell">Fec. Retiro</TableHead>
-                    <TableHead className="text-right w-[100px]">Acciones</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

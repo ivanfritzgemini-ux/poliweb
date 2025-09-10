@@ -17,12 +17,6 @@
     },
     "001360e58df907c45745f24f3d1c0b1ac2578ef3fa": {
       "workers": {
-        "app/staff/page": {
-          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "getSexos",
-          "filename": "src/lib/actions.ts"
-        },
         "app/students/page": {
           "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -31,7 +25,6 @@
         }
       },
       "layer": {
-        "app/staff/page": "action-browser",
         "app/students/page": "action-browser"
       },
       "filename": "src/lib/actions.ts",
@@ -126,66 +119,6 @@
       },
       "filename": "src/lib/actions.ts",
       "exportedName": "updateStudent"
-    },
-    "000c1785986823f0f7b88a24ed7f50a3a09b4fb3e8": {
-      "workers": {
-        "app/staff/page": {
-          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "getStaff",
-          "filename": "src/lib/actions.ts"
-        }
-      },
-      "layer": {
-        "app/staff/page": "action-browser"
-      },
-      "filename": "src/lib/actions.ts",
-      "exportedName": "getStaff"
-    },
-    "70318ae1f0710b3174289cd85dac0412dd58ea8703": {
-      "workers": {
-        "app/staff/page": {
-          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "updateStaff",
-          "filename": "src/lib/actions.ts"
-        }
-      },
-      "layer": {
-        "app/staff/page": "action-browser"
-      },
-      "filename": "src/lib/actions.ts",
-      "exportedName": "updateStaff"
-    },
-    "00f9af469b9dffbef6a90c7400513ba5de2b5143c8": {
-      "workers": {
-        "app/staff/page": {
-          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "getRoles",
-          "filename": "src/lib/actions.ts"
-        }
-      },
-      "layer": {
-        "app/staff/page": "action-browser"
-      },
-      "filename": "src/lib/actions.ts",
-      "exportedName": "getRoles"
-    },
-    "4061bfce9d28c7e7e546155f10656a2e7cb78344cc": {
-      "workers": {
-        "app/staff/page": {
-          "moduleId": "[project]/.next-internal/server/app/staff/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "addStaff",
-          "filename": "src/lib/actions.ts"
-        }
-      },
-      "layer": {
-        "app/staff/page": "action-browser"
-      },
-      "filename": "src/lib/actions.ts",
-      "exportedName": "addStaff"
     }
   },
   "edge": {},

@@ -54,5 +54,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
