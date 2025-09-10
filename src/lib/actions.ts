@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 import type { Staff } from './types';
 
 export async function getStaff(): Promise<Staff[]> {
-  const { data, error } = await supabase.from('usuarios').select('id, rut, nombres, apellidos, email, status, sexo(id, nombre), role:roles(id, nombre_rol)');
+  const { data, error } = await supabase.from('usuarios').select('id, rut, nombres, apellidos, email, status, fecha_nacimiento, sexo(id, nombre), role:roles(id, nombre_rol)');
   if (error) {
     console.error('Error fetching staff:', error);
     throw new Error('Could not fetch staff data.');
@@ -30,6 +30,21 @@ export async function getRoles() {
   return data.map(role => ({ ...role, id: String(role.id) }));
 }
 
+export async function getRoleIdByName(roleName: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('roles')
+    .select('id')
+    .eq('nombre_rol', roleName)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found, which is not an error here.
+    console.error(`Error fetching role ID for ${roleName}:`, error);
+    throw new Error(`Could not fetch role ID for ${roleName}.`);
+  }
+
+  return data ? String(data.id) : null;
+}
+
 export async function addStaff(formData: any) {
   const { email, password, ...rest } = formData;
 
@@ -51,7 +66,7 @@ export async function addStaff(formData: any) {
     sexo_id: rest.sexo_id,
     email: email,
     rol_id: rest.rol_id,
-    fecha_nacimiento: rest.fecha_de_nacimiento, // Already an ISO string
+    fecha_nacimiento: rest.fecha_nacimiento, // Already an ISO string
     telefono: rest.telefono || null,
     direccion: rest.direccion || null,
   }).select('id, rut, nombres, apellidos, email, status, sexo(id, nombre), role:roles(id, nombre_rol)').single();
@@ -121,16 +136,20 @@ export async function getStaffByRut(rut: string): Promise<Staff | null> {
 
 export async function getStudents(): Promise<any[]> {
   // This query joins student details with user details.
-  // It assumes 'estudiantes_detalles' has a 'rut' column that is a foreign key to 'usuarios.rut'.
   const { data, error } = await supabase
     .from('estudiantes_detalles')
-    .select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(nivel, letra), usuario:usuarios(rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(nombre), email, telefono, direccion)')
+    .select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)')
     .order('nro_registro', { ascending: true });
   if (error) {
     console.error('Error fetching students:', error);
     throw new Error('Could not fetch student data.');
   }
-  return data.map(s => ({ ...s.usuario, ...s, id: s.nro_registro, grade: s.curso?.nivel ? `${s.curso.nivel}º Medio ${s.curso.letra}` : null, enrollmentDate: s.fecha_matricula }));
+  return data.map(s => {
+    const student = { ...s.usuario, ...s, id: s.nro_registro, userId: s.usuario.id, grade: s.curso?.nivel ? `${s.curso.nivel}º Medio ${s.curso.letra}` : null, enrollmentDate: s.fecha_matricula };
+    student.sexo = s.usuario.sexo;
+    student.curso = s.curso;
+    return student;
+  });
 }
 
 export async function getCourses(): Promise<{ id: string; nombre: string }[]> {
@@ -142,6 +161,43 @@ export async function getCourses(): Promise<{ id: string; nombre: string }[]> {
   }
 
   return data.map(curso => ({ id: String(curso.id), nombre: `${curso.nivel}º Medio ${curso.letra}` }));
+}
+
+export async function createUser(userData: any, rol_id: string | null = null) {
+  const { email, password, ...rest } = userData;
+
+  // Generate a random password if not provided
+  const userPassword = password || Math.random().toString(36).substring(2, 15);
+
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password: userPassword,
+  });
+
+  if (authError) {
+    console.error('Error signing up user:', authError);
+    throw new Error(authError.message);
+  }
+
+  const { data, error } = await supabase.from('usuarios').insert({
+    id: authData.user?.id, // Link to Supabase Auth user ID
+    rut: rest.rut,
+    nombres: rest.nombres,
+    apellidos: rest.apellidos,
+    sexo_id: rest.sexo_id,
+    email: email,
+    fecha_nacimiento: rest.fecha_nacimiento,
+    telefono: rest.phone || null,
+    direccion: rest.address || null,
+    rol_id: rol_id,
+  }).select('id').single();
+
+  if (error) {
+    console.error('Error inserting user data:', error);
+    throw new Error(error.message);
+  }
+
+  return data.id; // Return the new user's ID
 }
 
 export async function addStudent(studentData: any) {
@@ -166,4 +222,80 @@ export async function addStudent(studentData: any) {
   }
 
   return data;
+}
+
+export async function updateStudent(userId: string, updates: any) {
+  const {
+    // Fields for 'usuarios' table
+    nombres,
+    apellidos,
+    sexo_id,
+    fecha_nacimiento,
+    telefono,
+    direccion,
+    // Fields for 'estudiantes_detalles' table
+    curso_id,
+    fecha_matricula,
+    fecha_retiro,
+  } = updates;
+
+  // 1. Update the 'usuarios' table
+  const { error: userError } = await supabase
+    .from('usuarios')
+    .update({
+      nombres,
+      apellidos,
+      sexo_id,
+      fecha_nacimiento,
+      telefono,
+      direccion,
+    })
+    .eq('id', userId);
+
+  if (userError) {
+    console.error('Error updating student user data:', userError);
+    throw new Error('Could not update student user data.');
+  }
+
+  // 2. Update the 'estudiantes_detalles' table
+  const { error: studentDetailsError } = await supabase
+    .from('estudiantes_detalles')
+    .update({
+      curso_id,
+      fecha_matricula,
+      fecha_retiro,
+    })
+    .eq('id', userId);
+
+  if (studentDetailsError) {
+    console.error('Error updating student details:', studentDetailsError);
+    throw new Error('Could not update student details.');
+  }
+
+  // 3. Fetch and return the updated student data
+  const { data: updatedStudent, error: fetchError } = await supabase
+    .from('estudiantes_detalles')
+    .select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)')
+    .eq('id', userId)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching updated student data:', fetchError);
+    throw new Error('Could not fetch updated student data.');
+  }
+  
+  const mappedStudent = { 
+    ...updatedStudent.usuario, 
+    ...updatedStudent, 
+    id: updatedStudent.nro_registro, 
+    userId: updatedStudent.usuario.id,
+    grade: updatedStudent.curso?.nivel ? `${updatedStudent.curso.nivel}º Medio ${updatedStudent.curso.letra}` : null, 
+    enrollmentDate: updatedStudent.fecha_matricula 
+  };
+
+  mappedStudent.sexo = updatedStudent.usuario.sexo;
+  mappedStudent.curso = updatedStudent.curso;
+
+
+  return mappedStudent;
 }

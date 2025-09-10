@@ -1,6 +1,6 @@
 {
   "node": {
-    "001caa51f19e6476b6e551c8dc978110694224d596": {
+    "00aaed6a73c0edfdb1ad703a73a0f955cd08566a80": {
       "workers": {
         "app/students/page": {
           "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
@@ -15,7 +15,7 @@
       "exportedName": "getStudents",
       "filename": "src/lib/actions.ts"
     },
-    "0009c048a3bd6aa52d0b25e31c4d73d5b53082487f": {
+    "001360e58df907c45745f24f3d1c0b1ac2578ef3fa": {
       "workers": {
         "app/students/page": {
           "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
@@ -30,7 +30,7 @@
       "exportedName": "getSexos",
       "filename": "src/lib/actions.ts"
     },
-    "003b2eeb44f52ef0e5bacd2292a025606f38a09047": {
+    "00891f9b4d067dec2b6e3822d71dd04d19d0bf271d": {
       "workers": {
         "app/students/page": {
           "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
@@ -45,7 +45,7 @@
       "exportedName": "getCourses",
       "filename": "src/lib/actions.ts"
     },
-    "407f7da717f73806b1cc158e584114ac5d985bd882": {
+    "402a21a934c0b4db3d757cf3237d46e5dd23440af7": {
       "workers": {
         "app/students/page": {
           "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
@@ -60,7 +60,7 @@
       "exportedName": "getStaffByRut",
       "filename": "src/lib/actions.ts"
     },
-    "40b04ca58732377a447a3233051dba938f9d133ed9": {
+    "4081bba27e6d0deed57af2105e8d98df7e827e97e9": {
       "workers": {
         "app/students/page": {
           "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
@@ -73,6 +73,51 @@
         "app/students/page": "action-browser"
       },
       "exportedName": "addStudent",
+      "filename": "src/lib/actions.ts"
+    },
+    "60ea012e8a715642589f9e5bf2df60597c68e2d869": {
+      "workers": {
+        "app/students/page": {
+          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "createUser",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/students/page": "action-browser"
+      },
+      "exportedName": "createUser",
+      "filename": "src/lib/actions.ts"
+    },
+    "405942351deeaa3d9701482b5e6677d13ef7c7c62a": {
+      "workers": {
+        "app/students/page": {
+          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getRoleIdByName",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/students/page": "action-browser"
+      },
+      "exportedName": "getRoleIdByName",
+      "filename": "src/lib/actions.ts"
+    },
+    "60672b3b880deb48a7540967a240a96c26c997b328": {
+      "workers": {
+        "app/students/page": {
+          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateStudent",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/students/page": "action-browser"
+      },
+      "exportedName": "updateStudent",
       "filename": "src/lib/actions.ts"
     }
   },

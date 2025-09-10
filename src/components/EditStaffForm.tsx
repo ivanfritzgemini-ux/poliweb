@@ -22,24 +22,24 @@ import {
 } from '@/components/ui/select';
 import type { Staff } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
-import { getSexos, getRoles, updateStaff } from '@/lib/actions';
-
-import { format } from 'date-fns';
-
-import { cn, validateChileanRut } from '@/lib/utils';
+import { useState } from 'react';
+import { updateStaff } from '@/lib/actions';
+import { validateChileanRut } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
+  rut: z.string().refine(validateChileanRut, { message: 'RUT inválido.' }),
   nombres: z.string().min(2, 'Los nombres deben tener al menos 2 caracteres.'),
   apellidos: z.string().min(2, 'Los apellidos deben tener al menos 2 caracteres.'),
   sexo_id: z.string({ required_error: 'Debe seleccionar un sexo.' }),
+  email: z.string().email('Email inválido.'),
   rol_id: z.string({ required_error: 'Debe seleccionar un rol.' }),
-  fecha_de_nacimiento: z.string({ required_error: 'Debe seleccionar una fecha de nacimiento.' }).refine(
-    (dateString) => !isNaN(new Date(dateString).getTime()),
-    {
-      message: 'La fecha de nacimiento no es válida.',
-    }
-  ),
+  fecha_nacimiento: z.string({ required_error: 'Debe seleccionar una fecha de nacimiento.' }).refine((dateString) => {
+    const date = new Date(dateString);
+    return !isNaN(date.getTime());
+  }, {
+    message: 'La fecha de nacimiento no es válida.',
+  }),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
 });
@@ -47,21 +47,24 @@ const formSchema = z.object({
 type EditStaffFormProps = {
   staff: Staff;
   onStaffUpdated: (staff: Staff) => void;
+  sexos: { id: string; nombre: string }[];
+  roles: { id: string; nombre_rol: string }[];
 };
 
-export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
+export function EditStaffForm({ staff, onStaffUpdated, sexos, roles }: EditStaffFormProps) {
   const { toast } = useToast();
-  const [sexos, setSexos] = useState<{ id: string; nombre: string }[]>([]);
-  const [roles, setRoles] = useState<{ id: string; nombre_rol: string }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      rut: staff.rut,
       nombres: staff.nombres,
       apellidos: staff.apellidos,
       sexo_id: staff.sexo?.id || '',
+      email: staff.email,
       rol_id: staff.role?.id || '',
-      fecha_de_nacimiento: staff.fecha_de_nacimiento ? format(new Date(staff.fecha_de_nacimiento), 'yyyy-MM-dd') : '',
+      fecha_nacimiento: staff.fecha_nacimiento ? staff.fecha_nacimiento.substring(0, 10) : '',
       telefono: staff.telefono || '',
       direccion: staff.direccion || '',
     },
@@ -70,29 +73,25 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      const fechaNacimientoDate = new Date(values.fecha_de_nacimiento); // Parse YYYY-MM-DD string to Date object
+      const fechaNacimientoDate = new Date(values.fecha_nacimiento);
 
       const updates = {
         nombres: values.nombres,
         apellidos: values.apellidos,
         sexo_id: values.sexo_id,
         rol_id: values.rol_id,
-        fecha_nacimiento: fechaNacimientoDate.toISOString(), // Convert Date to ISO string
+        fecha_nacimiento: fechaNacimientoDate.toISOString(),
         telefono: values.telefono || null,
         direccion: values.direccion || null,
       };
 
-      await updateStaff(staff.rut, updates);
+      await updateStaff(staff.rut, updates, staff.id);
 
       const updatedStaffMember: Staff = {
         ...staff,
-        nombres: values.nombres,
-        apellidos: values.apellidos,
+        ...updates,
         sexo: sexos.find(s => s.id === values.sexo_id) || null,
         role: roles.find(r => r.id === values.rol_id) || null,
-        fecha_de_nacimiento: fechaNacimientoDate.toISOString(),
-        telefono: values.telefono || null,
-        direccion: values.direccion || null,
       };
 
       onStaffUpdated(updatedStaffMember);
@@ -113,13 +112,39 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4 pt-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-x-8 gap-y-4 pt-4">
+        <FormField
+          control={form.control}
+          name="rut"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs sm:text-sm">RUT</FormLabel>
+              <FormControl>
+                <Input {...field} disabled />
+              </FormControl>
+              <FormMessage className="text-xs sm:text-sm" />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs sm:text-sm">Email</FormLabel>
+              <FormControl>
+                <Input {...field} disabled />
+              </FormControl>
+              <FormMessage className="text-xs sm:text-sm" />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="nombres"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Nombres</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Nombres*</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Ricardo" {...field} />
               </FormControl>
@@ -132,7 +157,7 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
           name="apellidos"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Apellidos</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Apellidos*</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Pérez Díaz" {...field} />
               </FormControl>
@@ -145,7 +170,7 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
           name="sexo_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Sexo</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Sexo*</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -169,7 +194,7 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
           name="rol_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Rol</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Rol*</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -190,16 +215,16 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
         />
         <FormField
           control={form.control}
-          name="fecha_de_nacimiento"
-          render={({ field }) => ( // No changes to the name, only the label
+          name="fecha_nacimiento"
+          render={({ field }) => (
             <FormItem className="col-span-2">
-              <FormLabel className="text-sm sm:text-base">Fecha de Nacimiento</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Fecha de Nacimiento*</FormLabel>
               <FormControl>
                 <Input
                   type="date"
                   placeholder="YYYY-MM-DD"
                   {...field}
-                  value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''} // Ensure YYYY-MM-DD format for input type="date"
+                  value={field.value ? field.value.substring(0, 10) : ''}
                 />
               </FormControl>
               <FormMessage className="text-xs sm:text-sm" />
@@ -209,9 +234,9 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
         <FormField
           control={form.control}
           name="telefono"
-          render={({ field }) => ( // No changes to the name, only the label
+          render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Teléfono (Opcional)</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Teléfono</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: +56912345678" {...field} />
               </FormControl>
@@ -222,9 +247,9 @@ export function EditStaffForm({ staff, onStaffUpdated }: EditStaffFormProps) {
         <FormField
           control={form.control}
           name="direccion"
-          render={({ field }) => ( // No changes to the name, only the label
+          render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Dirección (Opcional)</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Dirección</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Calle Falsa 123" {...field} />
               </FormControl>

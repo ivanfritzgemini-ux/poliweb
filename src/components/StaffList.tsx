@@ -243,24 +243,9 @@ export function StaffList() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right p-2 sm:p-4">
-                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Abrir menú</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEditClick(person)}>Editar información</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {person.status ? (
-                               <DropdownMenuItem onClick={() => handleStatusChange(person, false)}>Desactivar cuenta</DropdownMenuItem>
-                            ) : (
-                               <DropdownMenuItem onClick={() => handleStatusChange(person, true)}>Activar cuenta</DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(person)}>
+                          Editar
+                        </Button>
                       </TableCell>
                  </TableRow>
                 ))) : (
@@ -276,7 +261,7 @@ export function StaffList() {
           </div>
         </CardContent>
       </Card>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-headline">Nuevo Personal</DialogTitle>
           <DialogDescription>
@@ -288,7 +273,7 @@ export function StaffList() {
 
       {selectedStaff && (
         <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle className="font-headline">Editar Personal</DialogTitle>
               <DialogDescription>

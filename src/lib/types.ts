@@ -4,10 +4,10 @@ export type Student = {
   nombres: string; // from usuarios
   apellidos: string; // from usuarios
   sexo: { nombre: string } | null;
-  fecha_de_nacimiento: string;
+  fecha_nacimiento: string;
   grade: string;
   enrollmentDate: string;
-  fecha_de_retiro?: string | null;
+  fecha_retiro?: string | null;
   status: 'active' | 'inactive';
   email: string;
   phone: string;
@@ -23,7 +23,7 @@ export type Staff = {
   email: string;
   role: { id: string; nombre_rol: string } | null;
   status: boolean;
-  fecha_de_nacimiento?: string;
+  fecha_nacimiento?: string;
   telefono?: string | null;
   direccion?: string | null;
 };

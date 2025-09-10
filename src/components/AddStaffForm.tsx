@@ -24,13 +24,7 @@ import type { Staff } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { getSexos, getRoles, addStaff } from '@/lib/actions';
-
-
-
-
-
-
-
+import { Loader2 } from 'lucide-react';
 import { cn, validateChileanRut } from '@/lib/utils';
 
 const formSchema = z.object({
@@ -41,12 +35,34 @@ const formSchema = z.object({
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.'),
   email: z.string().email('Email inválido.'),
   rol_id: z.string({ required_error: 'Debe seleccionar un rol.' }),
-  fecha_de_nacimiento: z.string({ required_error: 'Debe seleccionar una fecha de nacimiento.' }).refine(
-    (dateString) => !isNaN(new Date(dateString).getTime()),
-    {
-      message: 'La fecha de nacimiento no es válida.',
+  fecha_nacimiento: z.string({ required_error: 'Debe seleccionar una fecha de nacimiento.' }).refine((dateString) => {
+    const date = new Date(dateString);
+    const currentYear = new Date().getFullYear();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // Month is 0-indexed
+    const day = date.getDate();
+
+    if (isNaN(date.getTime())) {
+      return false; // Invalid date format
     }
-  ),
+    if (year < 1900 || year > currentYear) {
+      return false; // Year out of range
+    }
+    if (month < 1 || month > 12) {
+      return false; // Month out of range
+    }
+    if (day < 1 || day > 31) {
+      return false; // Day out of range (basic check)
+    }
+    // Check for valid day for the given month and year (e.g., no Feb 30)
+    const lastDayOfMonth = new Date(year, month, 0).getDate();
+    if (day > lastDayOfMonth) {
+      return false;
+    }
+    return true;
+  }, {
+    message: 'La fecha de nacimiento no es válida. Asegúrese de que el formato sea DD/MM/YYYY y el año esté entre 1900 y el actual.',
+  }),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
 });
@@ -79,10 +95,8 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      const fechaNacimientoDate = new Date(values.fecha_de_nacimiento); // Parse YYYY-MM-DD string to Date object
+      const fechaNacimientoDate = new Date(values.fecha_nacimiento); // Parse YYYY-MM-DD string to Date object
 
-      // The addStaff action expects the data to be in the format of the 'usuarios' table
-      // The 'id' field for the 'usuarios' table will be populated by the auth.signUp result
       const staffData = {
         rut: values.rut,
         nombres: values.nombres,
@@ -90,8 +104,7 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
         sexo_id: values.sexo_id,
         email: values.email,
         rol_id: values.rol_id,
-                fecha_de_nacimiento: fechaNacimientoDate.toISOString(), // Convert Date to ISO string
-
+        fecha_nacimiento: fechaNacimientoDate.toISOString(), // Convert Date to ISO string
         telefono: values.telefono || null,
         direccion: values.direccion || null,
       };
@@ -117,13 +130,13 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4 pt-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-x-8 gap-y-4 pt-4">
         <FormField
           control={form.control}
           name="rut"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">RUT</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">RUT*</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: 12.345.678-9" {...field} />
               </FormControl>
@@ -136,7 +149,7 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
           name="nombres"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Nombres</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Nombres*</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Ricardo" {...field} />
               </FormControl>
@@ -149,7 +162,7 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
           name="apellidos"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Apellidos</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Apellidos*</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Pérez Díaz" {...field} />
               </FormControl>
@@ -162,7 +175,7 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
           name="sexo_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Sexo</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Sexo*</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -186,7 +199,7 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Email</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Email*</FormLabel>
               <FormControl>
                 <Input placeholder="ejemplo@acad.link" {...field} />
               </FormControl>
@@ -199,7 +212,7 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Contraseña</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Contraseña*</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="********" {...field} />
               </FormControl>
@@ -212,7 +225,7 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
           name="rol_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Rol</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Rol*</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -233,16 +246,16 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
         />
         <FormField
           control={form.control}
-          name="fecha_de_nacimiento" // No changes to the name, only the label
+          name="fecha_nacimiento"
           render={({ field }) => (
             <FormItem className="col-span-2">
-              <FormLabel className="text-sm sm:text-base">Fecha de Nacimiento</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Fecha de Nacimiento*</FormLabel>
               <FormControl>
                 <Input
                   type="date"
                   placeholder="YYYY-MM-DD"
                   {...field}
-                  value={field.value ? field.value.split('T')[0] : ''} // Ensure YYYY-MM-DD format for input type="date"
+                  value={field.value ? field.value.split('T')[0] : ''}
                 />
               </FormControl>
               <FormMessage className="text-xs sm:text-sm" />
@@ -252,9 +265,9 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
         <FormField
           control={form.control}
           name="telefono"
-          render={({ field }) => ( // No changes to the name, only the label
+          render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Teléfono (Opcional)</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Teléfono</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: +56912345678" {...field} />
               </FormControl>
@@ -265,9 +278,9 @@ export function AddStaffForm({ onStaffAdded, sexos, roles }: AddStaffFormProps) 
         <FormField
           control={form.control}
           name="direccion"
-          render={({ field }) => ( // No changes to the name, only the label
+          render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm sm:text-base">Dirección (Opcional)</FormLabel>
+              <FormLabel className="text-xs sm:text-sm">Dirección</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Calle Falsa 123" {...field} />
               </FormControl>

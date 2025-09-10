@@ -14,8 +14,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { Student } from '@/lib/types';
-import { getStaffByRut, getSexos, getCourses, addStudent } from '@/lib/actions';
-import { format } from 'date-fns';
+import { getStaffByRut, getSexos, getCourses, addStudent, createUser, getRoleIdByName } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState, useRef } from 'react';
 import { Loader2, Search } from 'lucide-react';
@@ -34,22 +33,22 @@ const formSchema = z.object({
   nombres: z.string().min(2, 'El nombre debe tener al menos 2 caracteres.'),
   apellidos: z.string().min(2, 'Los apellidos deben tener al menos 2 caracteres.'),
   sexo_id: z.string({ required_error: 'Debe seleccionar un sexo.' }),
-  fecha_nacimiento: z.string({ required_error: 'Debe seleccionar una fecha de nacimiento.' }).refine(
-    (dateString) => !isNaN(new Date(dateString).getTime()),
-    {
-      message: 'La fecha de nacimiento no es válida.',
-    }
-  ),
+  fecha_nacimiento: z.string({ required_error: 'Debe seleccionar una fecha de nacimiento.' }).refine((dateString) => {
+    const date = new Date(dateString);
+    return !isNaN(date.getTime());
+  }, {
+    message: 'La fecha de nacimiento no es válida.',
+  }),
   email: z.string().email('Email inválido.'),
   phone: z.string().min(5, 'Número de teléfono inválido.').optional().or(z.literal('')),
   address: z.string().min(5, 'Dirección inválida.').optional().or(z.literal('')),
   curso_id: z.string({ required_error: 'Debe seleccionar un curso.' }),
-  enrollmentDate: z.string({ required_error: 'Debe seleccionar una fecha de matrícula.' }).refine(
-    (dateString) => !isNaN(new Date(dateString).getTime()),
-    {
-      message: 'La fecha de matrícula no es válida.',
-    }
-  ),
+  enrollmentDate: z.string({ required_error: 'Debe seleccionar una fecha de matrícula.' }).refine((dateString) => {
+    const date = new Date(dateString);
+    return !isNaN(date.getTime());
+  }, {
+    message: 'La fecha de matrícula no es válida.',
+  }),
 });
 
 type EnrollStudentFormProps = {
@@ -67,6 +66,7 @@ export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos,
   const [courses, setCourses] = useState(initialCourses);
   const rutInputRef = useRef<HTMLInputElement>(null);
   const [foundUserId, setFoundUserId] = useState<string | null>(null);
+  const [studentRoleId, setStudentRoleId] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -76,7 +76,7 @@ export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos,
       nombres: '',
       apellidos: '',
       sexo_id: '',
-      fecha_nacimiento: '', // This should be a string in 'yyyy-MM-dd' format
+      fecha_nacimiento: '',
       email: '',
       phone: '',
       address: '',
@@ -99,6 +99,8 @@ export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos,
         const fetchedCourses = await getCourses();
         setCourses(fetchedCourses);
       }
+      const roleId = await getRoleIdByName('Estudiante');
+      setStudentRoleId(roleId);
     }
     fetchData();
   }, [initialSexos, initialCourses]);
@@ -119,7 +121,7 @@ export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos,
         form.setValue('email', person.email);
         form.setValue('phone', person.telefono || '');
         form.setValue('address', person.direccion || '');
-        form.setValue('fecha_nacimiento', person.fecha_nacimiento ? format(new Date(person.fecha_nacimiento), 'yyyy-MM-dd') : '');
+        form.setValue('fecha_nacimiento', person.fecha_nacimiento ? new Date(person.fecha_nacimiento).toISOString().split('T')[0] : '');
         if (person.sexo) form.setValue('sexo_id', person.sexo.id);
         toast({ title: 'Persona Encontrada', description: 'Datos cargados en el formulario.' });
       } else {
@@ -139,25 +141,31 @@ export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos,
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+
     try {
       let userId = foundUserId;
+      const serverValues = {
+        ...values,
+        fecha_nacimiento: new Date(values.fecha_nacimiento).toISOString(),
+        enrollmentDate: new Date(values.enrollmentDate).toISOString(),
+      };
+
       if (!userId) {
-        const user = await getStaffByRut(values.rut);
-        if (user) {
-          userId = user.id;
-        } else {
-          toast({
-            title: 'Error',
-            description: 'El usuario con el RUT especificado no existe. Búsquelo antes de matricular.',
-            variant: 'destructive',
-          });
-          setIsSubmitting(false);
-          return;
-        }
+        // User not found, create a new user
+        userId = await createUser({
+          rut: serverValues.rut,
+          nombres: serverValues.nombres,
+          apellidos: serverValues.apellidos,
+          email: serverValues.email,
+          phone: serverValues.phone,
+          address: serverValues.address,
+          sexo_id: serverValues.sexo_id,
+          fecha_nacimiento: serverValues.fecha_nacimiento,
+        }, studentRoleId);
       }
 
       const studentName = `${values.nombres} ${values.apellidos}`;
-      const newStudentData = await addStudent({ ...values, usuario: userId });
+      const newStudentData = await addStudent({ ...serverValues, usuario: userId });
 
       // Construct the full student object for optimistic update
       const fullNewStudent = {
@@ -259,8 +267,9 @@ export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos,
                 <FormControl>
                   <Input
                     type="date"
+                    placeholder="YYYY-MM-DD"
                     {...field}
-                    value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
+                    value={field.value ? field.value.split('T')[0] : ''}
                   />
                 </FormControl>
                 <FormMessage />
@@ -337,8 +346,9 @@ export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos,
                 <FormControl>
                   <Input
                     type="date"
+                    placeholder="YYYY-MM-DD"
                     {...field}
-                    value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
+                    value={field.value ? field.value.split('T')[0] : ''}
                   />
                 </FormControl>
                 <FormMessage />
