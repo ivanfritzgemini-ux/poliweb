@@ -380,6 +380,11 @@ body {
   overflow-x: hidden;
 }
 
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
 .sr-only {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
@@ -1140,6 +1145,10 @@ body {
 
 .overflow-hidden {
   overflow: hidden;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
 }
 
 .overflow-x-hidden {

@@ -1,7 +1,7 @@
 {
-  "/favicon.ico/route": "/favicon.ico",
   "/_not-found/page": "/_not-found",
-  "/students/page": "/students",
+  "/favicon.ico/route": "/favicon.ico",
   "/staff/page": "/staff",
-  "/page": "/"
+  "/page": "/",
+  "/students/page": "/students"
 }

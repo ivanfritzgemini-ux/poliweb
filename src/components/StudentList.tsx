@@ -171,48 +171,48 @@ export function StudentList() {
                 </Button>
               </DialogTrigger>
             </div>
-            <div className="rounded-lg border">
+            <div className="rounded-lg border overflow-x-auto">
               {isLoading ? <TableSkeleton /> : (
                 <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nº Registro</TableHead>
-                    <TableHead>RUT</TableHead>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead className="hidden md:table-cell">Sexo</TableHead>
-                    <TableHead className="hidden lg:table-cell">Fec. Nacimiento</TableHead>
-                    <TableHead>Curso</TableHead>
-                    <TableHead className="hidden lg:table-cell">Fec. Matrícula</TableHead>
-                    <TableHead className="hidden lg:table-cell">Fec. Retiro</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead className="whitespace-nowrap">Nº Registro</TableHead>
+                    <TableHead className="whitespace-nowrap">RUT</TableHead>
+                    <TableHead className="whitespace-nowrap">Nombre</TableHead>
+                    <TableHead className="hidden md:table-cell whitespace-nowrap">Sexo</TableHead>
+                    <TableHead className="hidden lg:table-cell whitespace-nowrap">Fec. Nacimiento</TableHead>
+                    <TableHead className="whitespace-nowrap">Curso</TableHead>
+                    <TableHead className="hidden lg:table-cell whitespace-nowrap">Fec. Matrícula</TableHead>
+                    <TableHead className="hidden lg:table-cell whitespace-nowrap">Fec. Retiro</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredStudents.length > 0 ? (
                     filteredStudents.map((student) => (
                       <TableRow key={student.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium whitespace-nowrap">
                           {student.id}
                         </TableCell>
-                        <TableCell>{student.rut}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
+                        <TableCell className="whitespace-nowrap">{student.rut}</TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <div className="flex items-center gap-2 whitespace-nowrap">
                             {`${student.nombres} ${student.apellidos}`}
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">{student.sexo?.nombre}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{new Date(student.fecha_nacimiento).toLocaleDateString('es-ES', { timeZone: 'UTC' })}</TableCell>
-                        <TableCell>{student.grade}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{new Date(student.enrollmentDate).toLocaleDateString('es-ES', { timeZone: 'UTC' })}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{student.fecha_retiro ? new Date(student.fecha_retiro).toLocaleDateString('es-ES', { timeZone: 'UTC' }) : '-'}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="hidden md:table-cell whitespace-nowrap">{student.sexo?.nombre}</TableCell>
+                        <TableCell className="hidden lg:table-cell whitespace-nowrap">{new Date(student.fecha_nacimiento).toLocaleDateString('es-ES', { timeZone: 'UTC' })}</TableCell>
+                        <TableCell className="whitespace-nowrap">{student.grade}</TableCell>
+                        <TableCell className="hidden lg:table-cell whitespace-nowrap">{new Date(student.enrollmentDate).toLocaleDateString('es-ES', { timeZone: 'UTC' })}</TableCell>
+                        <TableCell className="hidden lg:table-cell whitespace-nowrap">{student.fecha_retiro ? new Date(student.fecha_retiro).toLocaleDateString('es-ES', { timeZone: 'UTC' }) : '-'}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
                           <Button variant="ghost" size="sm" onClick={() => handleEditClick(student)}>Editar</Button>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={10} className="h-24 text-center">
+                      <TableCell colSpan={10} className="h-24 text-center whitespace-nowrap">
                         No se encontraron estudiantes.
                       </TableCell>
                     </TableRow>
