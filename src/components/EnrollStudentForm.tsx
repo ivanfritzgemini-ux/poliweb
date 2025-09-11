@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { Student } from '@/lib/types';
-import { getStaffByRut, getSexos, getCourses, addStudent, createUser, getRoleIdByName } from '@/lib/actions';
+import { getStudentByRut, getStaffByRut, getSexos, getCourses, addStudent, createUser, getRoleIdByName } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState, useRef } from 'react';
 import { Loader2, Search } from 'lucide-react';
@@ -115,15 +115,25 @@ export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos,
     try {
       const person = await getStaffByRut(rut);
       if (person) {
-        setFoundUserId(person.id);
-        form.setValue('nombres', person.nombres);
-        form.setValue('apellidos', person.apellidos);
-        form.setValue('email', person.email);
-        form.setValue('phone', person.telefono || '');
-        form.setValue('address', person.direccion || '');
-        form.setValue('fecha_nacimiento', person.fecha_nacimiento ? new Date(person.fecha_nacimiento).toISOString().split('T')[0] : '');
-        if (person.sexo) form.setValue('sexo_id', person.sexo.id);
-        toast({ title: 'Persona Encontrada', description: 'Datos cargados en el formulario.' });
+        const existingStudent = await getStudentByRut(rut);
+        if (existingStudent) {
+          form.setError('rut', { type: 'manual', message: 'Este RUT ya corresponde a un estudiante matriculado.' });
+          toast({
+            title: 'Estudiante ya Matriculado',
+            description: 'El RUT ingresado ya está registrado como estudiante.',
+            variant: 'destructive',
+          });
+        } else {
+          setFoundUserId(person.id);
+          form.setValue('nombres', person.nombres);
+          form.setValue('apellidos', person.apellidos);
+          form.setValue('email', person.email);
+          form.setValue('phone', person.telefono || '');
+          form.setValue('address', person.direccion || '');
+          form.setValue('fecha_nacimiento', person.fecha_nacimiento ? new Date(person.fecha_nacimiento).toISOString().split('T')[0] : '');
+          if (person.sexo) form.setValue('sexo_id', person.sexo.id);
+          toast({ title: 'Persona Encontrada', description: 'Datos cargados en el formulario.' });
+        }
       } else {
         setFoundUserId(null);
         toast({ title: 'No Encontrado', description: 'No se encontró a nadie con ese RUT. Puede registrarlo manualmente.', variant: 'destructive' });
@@ -143,6 +153,18 @@ export function EnrollStudentForm({ onStudentAdded, nextId, sexos: initialSexos,
     setIsSubmitting(true);
 
     try {
+      const existingStudent = await getStudentByRut(values.rut);
+      if (existingStudent) {
+        form.setError('rut', { type: 'manual', message: 'Este RUT ya corresponde a un estudiante matriculado.' });
+        toast({
+          title: 'Estudiante ya Matriculado',
+          description: 'El RUT ingresado ya está registrado como estudiante.',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       let userId = foundUserId;
       const serverValues = {
         ...values,

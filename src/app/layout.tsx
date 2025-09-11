@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { DashboardLayout } from '@/components/DashboardLayout';
 
 export const metadata: Metadata = {
-  title: 'AcademiaLink',
+  title: 'Polivalente Ancud',
   description: 'Gestión escolar simplificada',
 };
 

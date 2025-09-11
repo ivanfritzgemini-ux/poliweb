@@ -51,7 +51,7 @@ const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_module
 "[project]/src/lib/actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"002d9a1ff16e0c6e7e6935575d2b1a6acdb108f44a":"getCourses","00524684d7079f734fd413a225057615b009443731":"getSexos","00b3365db56babd3b6098379aea9b0546ce5f86af7":"getRoles","4016cf7706a8e3a0909f3a369b71430612112deb5c":"getStaffByRut","4044cd5cf2059f51f23cb03de22a9b926bc2eedba1":"getRoleIdByName","40c65d8fa5daf8b6cd87cc78d479ef2e108f08cb02":"addStudent","40dc39ed34aa137806b976b4b9580705bf1dc5368e":"addStaff","60a893be4974abf979914475543643232281ea8402":"getStudents","60b72c191cb380e4e265af9cd01a22c0c80c7d436a":"createUser","60f12475fe20c3b1d9c185656638a34de0c1ffc307":"getStaff","60f1417fa57266eaa8e431f79446cbe1c0b808327c":"updateStudent","702dd697be5ee85e0f73ba948cb73b237413c84cbd":"updateStaff"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"002d9a1ff16e0c6e7e6935575d2b1a6acdb108f44a":"getCourses","00524684d7079f734fd413a225057615b009443731":"getSexos","00b3365db56babd3b6098379aea9b0546ce5f86af7":"getRoles","4016cf7706a8e3a0909f3a369b71430612112deb5c":"getStaffByRut","4044cd5cf2059f51f23cb03de22a9b926bc2eedba1":"getRoleIdByName","407e4ba96aad76a9487791155a4f634edcb5015a53":"getStudentByRut","40c65d8fa5daf8b6cd87cc78d479ef2e108f08cb02":"addStudent","40dc39ed34aa137806b976b4b9580705bf1dc5368e":"addStaff","60b72c191cb380e4e265af9cd01a22c0c80c7d436a":"createUser","60f1417fa57266eaa8e431f79446cbe1c0b808327c":"updateStudent","702dd697be5ee85e0f73ba948cb73b237413c84cbd":"updateStaff","70a893be4974abf979914475543643232281ea8402":"getStudents","70f12475fe20c3b1d9c185656638a34de0c1ffc307":"getStaff"},"",""] */ __turbopack_context__.s([
     "addStaff",
     ()=>addStaff,
     "addStudent",
@@ -70,6 +70,8 @@ const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_module
     ()=>getStaff,
     "getStaffByRut",
     ()=>getStaffByRut,
+    "getStudentByRut",
+    ()=>getStudentByRut,
     "getStudents",
     ()=>getStudents,
     "updateStaff",
@@ -82,15 +84,22 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/build/webpack/loaders/next-flight-loader/action-validate.js [app-rsc] (ecmascript)");
 ;
 ;
-async function getStaff(page = 1, pageSize = 10) {
+async function getStaff(page = 1, pageSize = 10, status) {
     const rangeFrom = (page - 1) * pageSize;
     const rangeTo = page * pageSize - 1;
-    const { data, error, count } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('usuarios').select('id, rut, nombres, apellidos, email, status, fecha_nacimiento, sexo(id, nombre), role:roles(id, nombre_rol)', {
+    let query = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('usuarios').select('id, rut, nombres, apellidos, email, status, fecha_nacimiento, sexo(id, nombre), role:roles(id, nombre_rol)', {
         count: 'exact'
-    }).order('rut', {
+    });
+    if (status) {
+        query = query.eq('status', status);
+    }
+    query = query.order('rut', {
         ascending: true
-    }) // Order by RUT for consistent pagination
-    .range(rangeFrom, rangeTo);
+    });
+    if (pageSize !== 0) {
+        query = query.range(rangeFrom, rangeTo);
+    }
+    const { data, error, count } = await query;
     if (error) {
         console.error('Error fetching staff:', error);
         throw new Error('Could not fetch staff data.');
@@ -194,14 +203,40 @@ async function getStaffByRut(rut) {
     }
     return data;
 }
-async function getStudents(page = 1, pageSize = 10) {
+async function getStudentByRut(rut) {
+    const { data: user, error: userError } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('usuarios').select('id').eq('rut', rut).single();
+    if (userError && userError.code !== 'PGRST116') {
+        console.error('Error fetching user by RUT:', userError);
+        throw new Error('No se pudo buscar el usuario por RUT.');
+    }
+    if (!user) {
+        return null; // User does not exist
+    }
+    const { data: student, error: studentError } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('estudiantes_detalles').select('nro_registro').eq('id', user.id).single();
+    if (studentError && studentError.code !== 'PGRST116') {
+        console.error('Error fetching student details:', studentError);
+        throw new Error('No se pudo buscar los detalles del estudiante.');
+    }
+    return student;
+}
+async function getStudents(page = 1, pageSize = 10, orderBy = {
+    column: 'nro_registro',
+    ascending: true
+}) {
     const rangeFrom = (page - 1) * pageSize;
     const rangeTo = page * pageSize - 1;
-    const { data, error, count } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('estudiantes_detalles').select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)', {
+    let query = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["supabase"].from('estudiantes_detalles').select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)', {
         count: 'exact'
-    }).order('nro_registro', {
-        ascending: true
-    }).range(rangeFrom, rangeTo);
+    });
+    if (orderBy) {
+        query = query.order(orderBy.column, {
+            ascending: orderBy.ascending
+        });
+    }
+    if (pageSize !== 0) {
+        query = query.range(rangeFrom, rangeTo);
+    }
+    const { data, error, count } = await query;
     if (error) {
         console.error('Error fetching students:', error);
         throw new Error('Could not fetch student data.');
@@ -336,20 +371,22 @@ async function updateStudent(userId, updates) {
     addStaff,
     updateStaff,
     getStaffByRut,
+    getStudentByRut,
     getStudents,
     getCourses,
     createUser,
     addStudent,
     updateStudent
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaff, "60f12475fe20c3b1d9c185656638a34de0c1ffc307", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaff, "70f12475fe20c3b1d9c185656638a34de0c1ffc307", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getSexos, "00524684d7079f734fd413a225057615b009443731", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRoles, "00b3365db56babd3b6098379aea9b0546ce5f86af7", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRoleIdByName, "4044cd5cf2059f51f23cb03de22a9b926bc2eedba1", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addStaff, "40dc39ed34aa137806b976b4b9580705bf1dc5368e", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateStaff, "702dd697be5ee85e0f73ba948cb73b237413c84cbd", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaffByRut, "4016cf7706a8e3a0909f3a369b71430612112deb5c", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStudents, "60a893be4974abf979914475543643232281ea8402", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStudentByRut, "407e4ba96aad76a9487791155a4f634edcb5015a53", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStudents, "70a893be4974abf979914475543643232281ea8402", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCourses, "002d9a1ff16e0c6e7e6935575d2b1a6acdb108f44a", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createUser, "60b72c191cb380e4e265af9cd01a22c0c80c7d436a", null);
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addStudent, "40c65d8fa5daf8b6cd87cc78d479ef2e108f08cb02", null);
@@ -360,6 +397,7 @@ async function updateStudent(userId, updates) {
 
 __turbopack_context__.s([]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/actions.ts [app-rsc] (ecmascript)");
+;
 ;
 ;
 ;
@@ -381,14 +419,16 @@ __turbopack_context__.s([
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getStaffByRut"],
     "4044cd5cf2059f51f23cb03de22a9b926bc2eedba1",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRoleIdByName"],
+    "407e4ba96aad76a9487791155a4f634edcb5015a53",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getStudentByRut"],
     "40c65d8fa5daf8b6cd87cc78d479ef2e108f08cb02",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["addStudent"],
-    "60a893be4974abf979914475543643232281ea8402",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getStudents"],
     "60b72c191cb380e4e265af9cd01a22c0c80c7d436a",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createUser"],
     "60f1417fa57266eaa8e431f79446cbe1c0b808327c",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateStudent"]
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateStudent"],
+    "70a893be4974abf979914475543643232281ea8402",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getStudents"]
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f2e$next$2d$internal$2f$server$2f$app$2f$students$2f$page$2f$actions$2e$js__$7b$__ACTIONS_MODULE0__$3d3e$__$225b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$2922$__$7d$__$5b$app$2d$rsc$5d$__$28$server__actions__loader$2c$__ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i('[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => "[project]/src/lib/actions.ts [app-rsc] (ecmascript)" } [app-rsc] (server actions loader, ecmascript) <locals>');
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/actions.ts [app-rsc] (ecmascript)");

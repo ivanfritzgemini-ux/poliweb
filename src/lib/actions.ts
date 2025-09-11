@@ -3,15 +3,29 @@
 import { supabase } from './supabase';
 import type { Staff } from './types';
 
-export async function getStaff(page: number = 1, pageSize: number = 10): Promise<{ staff: Staff[], totalCount: number }> {
+export async function getStaff(
+  page: number = 1, 
+  pageSize: number = 10,
+  status?: string
+): Promise<{ staff: Staff[], totalCount: number }> {
   const rangeFrom = (page - 1) * pageSize;
   const rangeTo = page * pageSize - 1;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('usuarios')
-    .select('id, rut, nombres, apellidos, email, status, fecha_nacimiento, sexo(id, nombre), role:roles(id, nombre_rol)', { count: 'exact' })
-    .order('rut', { ascending: true }) // Order by RUT for consistent pagination
-    .range(rangeFrom, rangeTo);
+    .select('id, rut, nombres, apellidos, email, status, fecha_nacimiento, sexo(id, nombre), role:roles(id, nombre_rol)', { count: 'exact' });
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+  
+  query = query.order('rut', { ascending: true });
+
+  if (pageSize !== 0) {
+    query = query.range(rangeFrom, rangeTo);
+  }
+
+  const { data, error, count } = await query;
 
   if (error) {
     console.error('Error fetching staff:', error);
@@ -143,15 +157,57 @@ export async function getStaffByRut(rut: string): Promise<Staff | null> {
   return data as Staff | null;
 }
 
-export async function getStudents(page: number = 1, pageSize: number = 10): Promise<{ students: any[], totalCount: number }> {
+export async function getStudentByRut(rut: string): Promise<any | null> {
+  const { data: user, error: userError } = await supabase
+    .from('usuarios')
+    .select('id')
+    .eq('rut', rut)
+    .single();
+
+  if (userError && userError.code !== 'PGRST116') {
+    console.error('Error fetching user by RUT:', userError);
+    throw new Error('No se pudo buscar el usuario por RUT.');
+  }
+
+  if (!user) {
+    return null; // User does not exist
+  }
+
+  const { data: student, error: studentError } = await supabase
+    .from('estudiantes_detalles')
+    .select('nro_registro')
+    .eq('id', user.id)
+    .single();
+
+  if (studentError && studentError.code !== 'PGRST116') {
+    console.error('Error fetching student details:', studentError);
+    throw new Error('No se pudo buscar los detalles del estudiante.');
+  }
+
+  return student;
+}
+
+export async function getStudents(
+  page: number = 1, 
+  pageSize: number = 10, 
+  orderBy: { column: string, ascending: boolean } = { column: 'nro_registro', ascending: true }
+): Promise<{ students: any[], totalCount: number }> {
   const rangeFrom = (page - 1) * pageSize;
   const rangeTo = page * pageSize - 1;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('estudiantes_detalles')
-    .select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)', { count: 'exact' })
-    .order('nro_registro', { ascending: true })
-    .range(rangeFrom, rangeTo);
+    .select('nro_registro, fecha_matricula, fecha_retiro, curso:cursos(id, nivel, letra), usuario:usuarios(id, rut, nombres, apellidos, fecha_nacimiento, sexo:sexo(id, nombre), email, telefono, direccion)', { count: 'exact' });
+
+  if (orderBy) {
+    query = query.order(orderBy.column, { ascending: orderBy.ascending });
+  }
+
+  if (pageSize !== 0) {
+    query = query.range(rangeFrom, rangeTo);
+  }
+
+  const { data, error, count } = await query;
 
   if (error) {
     console.error('Error fetching students:', error);

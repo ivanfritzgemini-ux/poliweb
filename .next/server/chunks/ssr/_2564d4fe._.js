@@ -88,7 +88,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Dashboa
 ;
 ;
 const metadata = {
-    title: 'AcademiaLink',
+    title: 'Polivalente Ancud',
     description: 'Gestión escolar simplificada'
 };
 function RootLayout({ children }) {

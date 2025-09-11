@@ -1,4 +1,4 @@
-# **App Name**: AcademiaLink
+# **App Name**: Polivalente Ancud
 
 ## Core Features:
 

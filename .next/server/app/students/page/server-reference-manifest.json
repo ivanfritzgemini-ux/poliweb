@@ -1,6 +1,6 @@
 {
   "node": {
-    "60a893be4974abf979914475543643232281ea8402": {
+    "70a893be4974abf979914475543643232281ea8402": {
       "workers": {
         "app/students/page": {
           "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
@@ -43,6 +43,21 @@
         "app/students/page": "action-browser"
       },
       "exportedName": "getCourses",
+      "filename": "src/lib/actions.ts"
+    },
+    "407e4ba96aad76a9487791155a4f634edcb5015a53": {
+      "workers": {
+        "app/students/page": {
+          "moduleId": "[project]/.next-internal/server/app/students/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getStudentByRut",
+          "filename": "src/lib/actions.ts"
+        }
+      },
+      "layer": {
+        "app/students/page": "action-browser"
+      },
+      "exportedName": "getStudentByRut",
       "filename": "src/lib/actions.ts"
     },
     "4016cf7706a8e3a0909f3a369b71430612112deb5c": {

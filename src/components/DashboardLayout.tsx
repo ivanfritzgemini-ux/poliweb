@@ -39,7 +39,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <SidebarHeader>
             <div className="flex items-center gap-2">
               <Logo className="size-7 text-primary" />
-              <h1 className="font-headline text-xl font-bold text-primary">AcademiaLink</h1>
+              <h1 className="font-headline text-xl font-bold text-primary">Polivalente Ancud</h1>
             </div>
           </SidebarHeader>
           <SidebarContent>

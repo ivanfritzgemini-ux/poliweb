@@ -2,13 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, GraduationCap, School, ArrowRight } from "lucide-react";
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
+import { getStudents, getStaff, getCourses } from "@/lib/actions";
 
-export default function DashboardPage() {
-  const recentEnrollments = [
-    { name: 'Elena Petrova', grade: '10º Grado' },
-    { name: 'Marcus Aurelius', grade: 'Filosofía I' },
-    { name: 'Juana de Arco', grade: 'Historia Medieval' },
-  ];
+export default async function DashboardPage() {
+  const { totalCount: studentCount } = await getStudents(1, 0);
+  const { totalCount: staffCount } = await getStaff(1, 0);
+  const courses = await getCourses();
+  const courseCount = courses.length;
+
+  const { students: recentEnrollments } = await getStudents(1, 3, { column: 'fecha_matricula', ascending: false });
+
   const staffActivity = [
     { name: 'Ricardo Perez', action: 'actualizó el perfil de un estudiante.' },
     { name: 'Maria Lopez', action: 'creó una nueva tarea.' },
@@ -18,7 +21,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-headline font-bold text-primary">Bienvenido a AcademiaLink</h1>
+        <h1 className="text-3xl font-headline font-bold text-primary">Bienvenido a Polivalente Ancud</h1>
         <p className="text-muted-foreground">Aquí tienes un resumen de la actividad de tu institución.</p>
       </div>
 
@@ -31,10 +34,7 @@ export default function DashboardPage() {
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% desde el mes pasado
-            </p>
+            <div className="text-2xl font-bold">{studentCount}</div>
           </CardContent>
         </Card>
         <Card>
@@ -43,10 +43,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">87</div>
-            <p className="text-xs text-muted-foreground">
-              +5 desde el mes pasado
-            </p>
+            <div className="text-2xl font-bold">{staffCount}</div>
           </CardContent>
         </Card>
         <Card>
@@ -55,10 +52,7 @@ export default function DashboardPage() {
             <School className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45</div>
-            <p className="text-xs text-muted-foreground">
-              +2 nuevos este semestre
-            </p>
+            <div className="text-2xl font-bold">{courseCount}</div>
           </CardContent>
         </Card>
       </div>
@@ -77,10 +71,9 @@ export default function DashboardPage() {
               {recentEnrollments.map((student, i) => (
                 <li key={i} className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{student.name}</p>
+                    <p className="font-medium">{student.nombres} {student.apellidos}</p>
                     <p className="text-sm text-muted-foreground">{student.grade}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">hace {i * 10 + 5} min</span>
                 </li>
               ))}
             </ul>
