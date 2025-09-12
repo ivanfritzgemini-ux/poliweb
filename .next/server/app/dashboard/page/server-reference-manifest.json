@@ -12,8 +12,8 @@
       "layer": {
         "app/dashboard/page": "action-browser"
       },
-      "filename": "src/lib/actions.ts",
-      "exportedName": "getStudents"
+      "exportedName": "getStudents",
+      "filename": "src/lib/actions.ts"
     },
     "70f12475fe20c3b1d9c185656638a34de0c1ffc307": {
       "workers": {
@@ -27,8 +27,8 @@
       "layer": {
         "app/dashboard/page": "action-browser"
       },
-      "filename": "src/lib/actions.ts",
-      "exportedName": "getStaff"
+      "exportedName": "getStaff",
+      "filename": "src/lib/actions.ts"
     },
     "002d9a1ff16e0c6e7e6935575d2b1a6acdb108f44a": {
       "workers": {
@@ -42,10 +42,9 @@
       "layer": {
         "app/dashboard/page": "action-browser"
       },
-      "filename": "src/lib/actions.ts",
-      "exportedName": "getCourses"
+      "exportedName": "getCourses",
+      "filename": "src/lib/actions.ts"
     }
   },
-  "edge": {},
-  "encryptionKey": "22MPJIs3bWYqhdTLWjXkX8dorHxEFlid6khdVZUga90="
+  "edge": {}
 }

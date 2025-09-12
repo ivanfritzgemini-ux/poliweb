@@ -1,14 +1,27 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, GraduationCap, School, ArrowRight } from "lucide-react";
+import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+import { getStudents, getStaff, getCourses } from "@/lib/actions";
+import { useEffect, useState } from "react";
 
-export default function RootPage() {
-  const router = useRouter();
+type UserProfile = {
+  nombres: string;
+  apellidos: string;
+  role?: { nombre_rol: string };
+};
 
-  useEffect(() => {
-    router.push('/login');
-  }, [router]);
+export default function DashboardPage() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    studentCount: 0,
+    staffCount: 0,
+    courseCount: 0,
+    recentEnrollments: [] as any[],
+  });
 
   useEffect(() => {
     // Load profile from localStorage
@@ -59,7 +72,11 @@ export default function RootPage() {
   ];
 
   return (
-    null // No renderizamos nada ya que redirigimos inmediatamente
+    <div className="space-y-8">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-3xl font-headline font-bold text-primary">
+          Bienvenido{profile?.nombres?.endsWith('a') ? 'a' : ''} {profile ? `${profile.nombres} ${profile.apellidos}` : ''}
+        </h1>
         <p className="text-muted-foreground">
           {profile?.role?.nombre_rol ? `${profile.role.nombre_rol} - ` : ''}
           Aquí tienes un resumen de la actividad de tu institución.

@@ -49,6 +49,26 @@ export default function LoginPage() {
       if (profileError) {
         // If user is authenticated but has no profile row, inform the user
         toast({ title: 'Perfil no encontrado', description: profileError.message || 'No hay perfil para este usuario.' })
+        // Sign out the user since they can't access the system without a profile
+        await supabase.auth.signOut()
+        setLoading(false)
+        return
+      }
+
+      if (!profile.role) {
+        toast({ title: 'Error de acceso', description: 'No se ha asignado un rol a este usuario. Por favor contacte al administrador.' })
+        // Sign out the user since they can't access the system without a role
+        await supabase.auth.signOut()
+        setLoading(false)
+        return
+      }
+
+      // Validate that the role is one of the expected values
+      const validRoles = ['admin', 'staff', 'estudiante']
+      if (!validRoles.includes(profile.role.nombre_rol.toLowerCase())) {
+        toast({ title: 'Error de acceso', description: 'El rol asignado no es válido. Por favor contacte al administrador.' })
+        // Sign out the user since they can't access the system with an invalid role
+        await supabase.auth.signOut()
         setLoading(false)
         return
       }
@@ -60,10 +80,27 @@ export default function LoginPage() {
         // ignore localStorage errors
       }
 
+  // Determinar la ruta de redirección basada en el rol
+  let redirectTo = '/'
+  if (profile.role?.nombre_rol) {
+    const role = profile.role.nombre_rol.toLowerCase()
+    switch (role) {
+      case 'admin':
+        redirectTo = '/admin'
+        break
+      case 'staff':
+        redirectTo = '/staff'
+        break
+      case 'estudiante':
+        redirectTo = '/students'
+        break
+    }
+  }
+
   toast({ title: 'Bienvenido', description: `Hola ${profile.nombres} ${profile.apellidos}` })
 
-  // Redirect to root dashboard page /
-  router.push('/')
+  // Redirect to role-specific dashboard
+  router.push(redirectTo)
     } catch (err: any) {
       toast({ title: 'Error', description: err?.message || String(err) })
     } finally {

@@ -786,6 +786,10 @@ img, video, iframe {
   width: 2.75rem;
 }
 
+.w-12 {
+  width: 3rem;
+}
+
 .w-16 {
   width: 4rem;
 }
@@ -1636,6 +1640,11 @@ img, video, iframe {
 
 .text-sidebar-foreground\/70 {
   color: hsl(var(--sidebar-foreground) / .7);
+}
+
+.text-yellow-500 {
+  --tw-text-opacity: 1;
+  color: rgba(234, 179, 8, var(--tw-text-opacity, 1));
 }
 
 .underline-offset-4 {
