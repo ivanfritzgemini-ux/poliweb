@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import {
   Home,
   Users,
   GraduationCap,
+  LogOut,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -22,9 +22,69 @@ import {
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/icons/Logo';
+import { useRouter, usePathname } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { Button } from './ui/button';
+import { useToast } from '@/hooks/use-toast';
+
+type UserProfile = {
+  nombres: string;
+  apellidos: string;
+  email: string;
+  role?: { nombre_rol: string };
+};
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    // Load profile from localStorage
+    try {
+      const savedProfile = localStorage.getItem('userProfile');
+      if (savedProfile) {
+        setProfile(JSON.parse(savedProfile));
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Check session client-side and redirect to /login if not authenticated
+    // Avoid redirect loop when already on /login
+    async function checkSession() {
+      if (pathname === '/login') return;
+
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (!session) {
+        router.replace('/login');
+      }
+    }
+
+    checkSession();
+  }, [pathname, router]);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('userProfile');
+      router.replace('/login');
+      toast({
+        title: 'Sesión cerrada',
+        description: 'Has cerrado sesión exitosamente.',
+      });
+    } catch (err) {
+      console.error('Error signing out:', err);
+      toast({
+        title: 'Error',
+        description: 'No se pudo cerrar la sesión.',
+      });
+    }
+  };
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Home, exact: true },
@@ -63,14 +123,22 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <SidebarFooter>
             <div className="flex items-center gap-3">
               <Avatar>
-                <AvatarImage src="https://picsum.photos/40/40" alt="Admin" data-ai-hint="person face" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarImage src="https://picsum.photos/40/40" alt={profile?.nombres || 'Usuario'} data-ai-hint="person face" />
+                <AvatarFallback>{profile?.nombres?.[0] || 'U'}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="text-sm font-semibold text-foreground">Admin</span>
-                <span className="text-xs text-muted-foreground">admin@acad.link</span>
+                <span className="text-sm font-semibold text-foreground">{profile?.nombres} {profile?.apellidos}</span>
+                <span className="text-xs text-muted-foreground">{profile?.role?.nombre_rol || 'Cargando...'}</span>
               </div>
             </div>
+            <Button
+              variant="ghost"
+              className="mt-4 w-full justify-start"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Cerrar sesión</span>
+            </Button>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>

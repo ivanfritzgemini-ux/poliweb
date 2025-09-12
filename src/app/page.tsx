@@ -1,16 +1,69 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, GraduationCap, School, ArrowRight } from "lucide-react";
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { getStudents, getStaff, getCourses } from "@/lib/actions";
+import { useEffect, useState } from "react";
 
-export default async function DashboardPage() {
-  const { totalCount: studentCount } = await getStudents(1, 0);
-  const { totalCount: staffCount } = await getStaff(1, 0);
-  const courses = await getCourses();
-  const courseCount = courses.length;
+type UserProfile = {
+  nombres: string;
+  apellidos: string;
+  role?: { nombre_rol: string };
+};
 
-  const { students: recentEnrollments } = await getStudents(1, 3, { column: 'fecha_matricula', ascending: false });
+export default function DashboardPage() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    studentCount: 0,
+    staffCount: 0,
+    courseCount: 0,
+    recentEnrollments: [] as any[],
+  });
+
+  useEffect(() => {
+    // Load profile from localStorage
+    try {
+      const savedProfile = localStorage.getItem('userProfile');
+      if (savedProfile) {
+        setProfile(JSON.parse(savedProfile));
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+    }
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const [
+          { totalCount: studentCount },
+          { totalCount: staffCount },
+          courses,
+          { students: recentEnrollments }
+        ] = await Promise.all([
+          getStudents(1, 0),
+          getStaff(1, 0),
+          getCourses(),
+          getStudents(1, 3, { column: 'fecha_matricula', ascending: false })
+        ]);
+
+        setStats({
+          studentCount,
+          staffCount,
+          courseCount: courses.length,
+          recentEnrollments,
+        });
+      } catch (err) {
+        console.error('Error loading stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadStats();
+  }, []);
 
   const staffActivity = [
     { name: 'Ricardo Perez', action: 'actualizó el perfil de un estudiante.' },
@@ -21,8 +74,13 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-headline font-bold text-primary">Bienvenido a Polivalente Ancud</h1>
-        <p className="text-muted-foreground">Aquí tienes un resumen de la actividad de tu institución.</p>
+        <h1 className="text-3xl font-headline font-bold text-primary">
+          Bienvenido{profile?.nombres?.endsWith('a') ? 'a' : ''} {profile ? `${profile.nombres} ${profile.apellidos}` : ''}
+        </h1>
+        <p className="text-muted-foreground">
+          {profile?.role?.nombre_rol ? `${profile.role.nombre_rol} - ` : ''}
+          Aquí tienes un resumen de la actividad de tu institución.
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -34,7 +92,7 @@ export default async function DashboardPage() {
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{studentCount}</div>
+            <div className="text-2xl font-bold">{loading ? '...' : stats.studentCount}</div>
           </CardContent>
         </Card>
         <Card>
@@ -43,7 +101,7 @@ export default async function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{staffCount}</div>
+            <div className="text-2xl font-bold">{loading ? '...' : stats.staffCount}</div>
           </CardContent>
         </Card>
         <Card>
@@ -52,7 +110,7 @@ export default async function DashboardPage() {
             <School className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{courseCount}</div>
+            <div className="text-2xl font-bold">{loading ? '...' : stats.courseCount}</div>
           </CardContent>
         </Card>
       </div>
@@ -68,7 +126,9 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-4">
-              {recentEnrollments.map((student, i) => (
+              {loading ? (
+                <li className="text-sm text-muted-foreground">Cargando matriculaciones...</li>
+              ) : stats.recentEnrollments.map((student, i) => (
                 <li key={i} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{student.nombres} {student.apellidos}</p>

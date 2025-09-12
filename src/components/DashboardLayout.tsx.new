@@ -1,0 +1,160 @@
+'use client';
+
+import Link from 'next/link';
+import { Home, Users, GraduationCap, LogOut } from 'lucide-react';
+import { ReactNode, useState, useEffect } from 'react';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarTrigger,
+  SidebarInset,
+} from '@/components/ui/sidebar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Logo } from '@/components/icons/Logo';
+import { useRouter, usePathname } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { Button } from './ui/button';
+import { useToast } from '@/hooks/use-toast';
+
+type UserProfile = {
+  nombres: string;
+  apellidos: string;
+  email: string;
+  role?: { nombre_rol: string };
+};
+
+export function DashboardLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    // Load profile from localStorage
+    const savedProfile = localStorage.getItem('userProfile');
+    if (savedProfile) {
+      try {
+        setProfile(JSON.parse(savedProfile));
+      } catch (err) {
+        console.error('Error loading profile:', err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Check session client-side and redirect to /login if not authenticated
+    // Avoid redirect loop when already on /login
+    async function checkSession() {
+      if (pathname === '/login') return;
+
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (!session) {
+        router.replace('/login');
+      }
+    }
+
+    checkSession();
+  }, [pathname, router]);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('userProfile');
+      router.replace('/login');
+      toast({
+        title: 'Sesión cerrada',
+        description: 'Has cerrado sesión exitosamente.',
+      });
+    } catch (err) {
+      console.error('Error signing out:', err);
+      toast({
+        title: 'Error',
+        description: 'No se pudo cerrar la sesión.',
+      });
+    }
+  };
+
+  const navItems = [
+    { href: '/', label: 'Dashboard', icon: Home, exact: true },
+    { href: '/students', label: 'Estudiantes', icon: GraduationCap },
+    { href: '/staff', label: 'Personal', icon: Users },
+  ];
+
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-background">
+        <Sidebar>
+          <SidebarHeader>
+            <div className="flex items-center gap-2">
+              <Logo className="size-7 text-primary" />
+              <h1 className="font-headline text-xl font-bold text-primary">Polivalente Ancud</h1>
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              {navItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
+                    tooltip={item.label}
+                  >
+                    <Link href={item.href}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarContent>
+          <SidebarFooter>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage
+                    src="https://picsum.photos/40/40"
+                    alt={profile?.nombres || 'Usuario'}
+                    data-ai-hint="person face"
+                  />
+                  <AvatarFallback>{profile?.nombres?.[0] || 'U'}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-foreground">
+                    {profile ? `${profile.nombres} ${profile.apellidos}` : 'Cargando...'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {profile?.role?.nombre_rol || ''}
+                  </span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar sesión</span>
+              </Button>
+            </div>
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+          <header className="flex h-14 items-center border-b bg-card px-4 lg:hidden">
+            <SidebarTrigger />
+          </header>
+          <main className="flex-1 p-4 md:p-6 lg:p-8">
+            {children}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  );
+}
